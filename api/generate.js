@@ -1,4 +1,4 @@
-// api/generate.js (v20 - Subtle Off-Camera Gaze & Physics Optimization)
+// api/generate.js (v21 - Hat Scale & Placement Fix)
 export const maxDuration = 60;
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
@@ -30,8 +30,9 @@ export default async function handler(req, res) {
       let outfit = hasTop ? "ultra-thin skin-tight white sleeveless base layer" : "minimalistic slim white tee";
       outfit += " and " + (hasBottom ? "thin skin-tight white leggings" : "simple shorts");
 
+      // 修正：帽子のスケール感を意識させるImagenプロンプト
       const prompt = `A professional CANDID fashion catalog photo of a 5-year-old Japanese boy, 110cm tall. 
-        ANATOMY: Perfect anatomical proportions, correct head-to-body ratio for a 5-year-old (no oversized head), knees and feet must face the correct natural direction, natural relaxed fingers with distinct nails. The clothing must be correctly scaled to fit this 110cm body, not appearing oversized.
+        ANATOMY: Perfect anatomical proportions, correct head-to-body ratio for a 5-year-old (no oversized head), knees and feet must face the correct natural direction, natural relaxed fingers with distinct nails. ensure accessories like hats are scaled to the same 110cm body proportions.
         POSE: ${posePrompt}. 
         EXPRESSION: ${expPrompt}. 
         WEARING: ${outfit}. 
@@ -61,8 +62,11 @@ export default async function handler(req, res) {
         }
       } else if (category === "bottoms") {
         instruction = "The pants should have highly realistic natural fabric folds and wrinkles. Ensure the front of the pants aligns correctly with the front-facing knees. Scale correctly to the child's legs.";
+      } else if (category === "accessories") {
+        // 修正：帽子のスケールと配置を強制するFashn.aiプロンプト
+        instruction = "Scale and place the hat naturally on the child's head, ensuring it doesn't appear too large, too small, or incorrectly angled. It should sit snug on the head. match the studio lighting.";
       } else {
-        instruction = "Realistic hat placement on the head, scaled correctly.";
+        instruction = "Realistic placement and scaling, matching the 110cm child's body. match the studio lighting.";
       }
 
       const fashnRes = await fetch('https://api.fashn.ai/v1/run', {
