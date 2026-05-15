@@ -64,7 +64,7 @@
               <label><input type="radio" name="pose" value="natural_lean" class="hidden" checked><div class="select-card text-center text-xs font-bold">自然な立ち姿</div></label>
               <label><input type="radio" name="pose" value="walking_snapshot" class="hidden"><div class="select-card text-center text-xs font-bold">歩き出し</div></label>
               <label><input type="radio" name="pose" value="energetic_jump" class="hidden"><div class="select-card text-center text-xs font-bold">ジャンプ</div></label>
-              <label><input type="radio" name="pose" value="looking_away" class="hidden"><div class="select-card text-center text-xs font-bold">目線外し</div></label>
+              <label><input type="radio" name="pose" value="looking_away" class="hidden"><div class="select-card text-center text-xs font-bold text-blue-600">目線外し</div></label>
             </div>
           </div>
           <div>
@@ -72,7 +72,7 @@
               ③ 表情
             </h2>
             <div class="grid grid-cols-3 gap-2">
-              <label><input type="radio" name="expression" value="calm_relaxed" class="hidden"  checked><div class="select-card text-center py-2 text-[10px] font-bold">リラックス</div></label>
+              <label><input type="radio" name="expression" value="calm_relaxed" class="hidden" checked><div class="select-card text-center py-2 text-[10px] font-bold">リラックス</div></label>
               <label><input type="radio" name="expression" value="mischievous" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">やんちゃ顔</div></label>
               <label><input type="radio" name="expression" value="beaming_smile" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">はじける笑顔</div></label>
             </div>
@@ -123,6 +123,7 @@
 
     const generateBtn = document.getElementById('generateBtn'), statusLabel = document.getElementById('statusLabel'), resultImg = document.getElementById('resultImg'), loading = document.getElementById('loading');
 
+    // 修正: タイムアウト処理（フリーズ対策）を組み込んだ processSequentially
     async function processSequentially(currentModel, tasks, total, selectedPose) {
       if (tasks.length === 0) {
         resultImg.src = currentModel; resultImg.classList.remove('hidden'); loading.classList.add('hidden');
@@ -134,21 +135,54 @@
       document.querySelectorAll('.step-dot').forEach((d, i) => d.classList.toggle('active', i === currentStep));
       statusLabel.innerText = `${task.label}を合成中`;
 
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'start', modelImage: currentModel, productPreview: task.image, category: task.category, pose: selectedPose })
-      });
-      const { jobId } = await res.json();
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'start', modelImage: currentModel, productPreview: task.image, category: task.category, pose: selectedPose })
+        });
+        const { jobId } = await res.json();
 
-      const timer = setInterval(async () => {
-        const sRes = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'status', jobId }) });
-        const sData = await sRes.json();
-        if (sData.status === 'completed') {
-          clearInterval(timer);
-          processSequentially(sData.output[0], tasks, total, selectedPose);
-        } else if (sData.status === 'failed') { clearInterval(timer); alert("合成失敗"); location.reload(); }
-      }, 4000);
+        let attempts = 0;
+        const maxAttempts = 30; // 最大120秒（4秒×30回）待機
+
+        const timer = setInterval(async () => {
+          attempts++;
+          
+          if (attempts > maxAttempts) {
+            clearInterval(timer);
+            alert(`${task.label}の合成がタイムアウトしました。サーバーが混雑している可能性があります。`);
+            loading.classList.add('hidden');
+            generateBtn.disabled = false;
+            document.getElementById('placeholder').classList.remove('hidden');
+            return;
+          }
+
+          try {
+            const sRes = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'status', jobId }) });
+            const sData = await sRes.json();
+            
+            if (sData.status === 'completed') {
+              clearInterval(timer);
+              processSequentially(sData.output[0], tasks, total, selectedPose);
+            } else if (sData.status === 'failed') { 
+              clearInterval(timer); 
+              alert("合成に失敗しました。画像を変えて再度お試しください。"); 
+              loading.classList.add('hidden');
+              generateBtn.disabled = false;
+              document.getElementById('placeholder').classList.remove('hidden');
+            }
+          } catch (e) {
+            console.warn("ステータス確認中に一時的なエラーが発生しました。リトライします...", e);
+          }
+        }, 4000);
+
+      } catch (e) {
+        alert("サーバーとの通信に失敗しました。");
+        loading.classList.add('hidden');
+        generateBtn.disabled = false;
+        document.getElementById('placeholder').classList.remove('hidden');
+      }
     }
 
     generateBtn.onclick = async () => {
@@ -175,14 +209,18 @@
         } else {
             processSequentially(modelImage, tasks, tasks.length, pose);
         }
-      } catch (e) { alert("エラー"); generateBtn.disabled = false; loading.classList.add('hidden'); }
+      } catch (e) { 
+        alert("エラーが発生しました。"); 
+        generateBtn.disabled = false; 
+        loading.classList.add('hidden'); 
+        document.getElementById('placeholder').classList.remove('hidden');
+      }
     };
     
-    // 修正: 画像表示を防ぎ、強制的にダウンロード（保存完了）させる処理
+    // 修正: 強制ダウンロード（画像だけが別タブで開くのを防ぐ）
     document.getElementById('downloadBtn').onclick = async () => {
       try {
         const imageSrc = document.getElementById('resultImg').src;
-        // fetchを使って画像をBlobとして取得
         const response = await fetch(imageSrc);
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -190,7 +228,6 @@
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
-        // ファイル名：tryon_boy_ミリ秒.jpg
         a.download = `tryon_boy_${Date.now()}.jpg`;
         
         document.body.appendChild(a);
