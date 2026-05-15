@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>F.O.KIDS Style Maker v14</title>
+  <title>F.O.KIDS Style Maker v15</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style type="text/tailwindcss">
     body { font-family: 'Inter', -apple-system, sans-serif; }
@@ -20,7 +20,10 @@
 <body class="bg-[#F8FAFC] min-h-screen pb-20">
   <div class="max-w-6xl mx-auto px-6">
     <header class="py-12 flex justify-between items-end">
-      <h1 class="text-4xl font-black text-slate-900 tracking-tighter italic">F.O.KIDS <span class="text-indigo-600">Style v14</span></h1>
+      <div>
+        <h1 class="text-4xl font-black text-slate-900 tracking-tighter italic">F.O.KIDS <span class="text-indigo-600">Style v15</span></h1>
+        <p class="text-slate-500 font-bold text-[10px] mt-1 uppercase tracking-widest">Footwear: Black Slip-on Shoes</p>
+      </div>
       <p class="text-slate-800 font-black text-xl tracking-tighter">110cm / AGE 5</p>
     </header>
 
@@ -156,7 +159,7 @@
     document.getElementById('downloadBtn').onclick = () => {
       const a = document.createElement('a');
       a.href = document.getElementById('resultImg').src;
-      a.download = `fokids-v14-${Date.now()}.jpg`;
+      a.download = `fokids-v15-${Date.now()}.jpg`;
       a.click();
     };
   </script>
