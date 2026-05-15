@@ -1,4 +1,4 @@
-// api/generate.js (v8)
+// api/generate.js (v9 - 高精度調整版)
 export const maxDuration = 60;
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
@@ -8,16 +8,16 @@ export default async function handler(req, res) {
   const { action } = req.body;
 
   try {
-    // ステップ1: Imagen 4.0 でベースモデルのみを作成
     if (action === 'create_model') {
       const { gender, race, hasHat, hasTop, hasBottom } = req.body;
       const raceMap = { 'Japanese': 'fully Japanese', 'Caucasian': 'fully Caucasian', 'half-Caucasian, half-Japanese': 'Eurasian mixed-race' };
       
-      let outfit = hasTop ? "thin white tight inner shirt" : "trendy white short-sleeve t-shirt";
-      outfit += " and " + (hasBottom ? "thin white leggings" : "classic blue denim pants");
-      const hat = hasHat ? "wearing thin white skull cap" : "no hat, neat hairstyle";
+      // 合成しやすくするため、土台となる服を極限までタイトに、髪型をボリュームなしに指定
+      let outfit = hasTop ? "ultra-thin skin-tight white sleeveless inner" : "basic white slim t-shirt";
+      outfit += " and " + (hasBottom ? "skin-tight white thin leggings" : "classic blue denim pants");
+      const hat = hasHat ? "shaved head style or very tight hair" : "natural neat hairstyle";
 
-      const prompt = `A professional catalog photo of a ${raceMap[race] || 'Japanese'} ${gender} child, 5 years old, 110cm tall. Standing confidently facing forward. Wearing: ${outfit}. Head: ${hat}. Background: Minimalist light gray. F.O.KIDS style.`;
+      const prompt = `A professional high-end catalog studio photo of a ${raceMap[race] || 'Japanese'} ${gender} child, 5 years old, 110cm tall. Standing straight, arms straight down at sides, facing camera. Wearing: ${outfit}. Head: ${hat}. Background: Seamless minimalist light gray. High resolution, sharp outlines, professional lighting. F.O.KIDS style.`;
 
       const imagenRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${geminiKey}`, {
         method: 'POST',
@@ -28,7 +28,6 @@ export default async function handler(req, res) {
       return res.status(200).json({ modelImage: `data:image/jpeg;base64,${imagenData.predictions[0].bytesBase64Encoded}` });
     }
 
-    // ステップ2: 渡された画像に対して1点だけ試着を実行 (tryon-max)
     if (action === 'start') {
       const { modelImage, productPreview, category } = req.body;
       const fashnRes = await fetch('https://api.fashn.ai/v1/run', {
@@ -37,7 +36,11 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           model_name: "tryon-max",
           inputs: { "model_image": modelImage, "product_image": productPreview },
-          category: category
+          category: category,
+          // パラメータを強化して馴染ませる
+          guidance_scale: 3.5,
+          timesteps: 50,
+          long_description: category === "accessories" ? "Ensure the hat fits naturally on the head contour." : "Ensure the garment fits the 110cm child model body naturally."
         })
       });
       const fashnData = await fashnRes.json();
