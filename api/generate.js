@@ -1,4 +1,4 @@
-// Vercel Serverless Function: api/generate.js (v5 - Final Fix)
+// Vercel Serverless Function: api/generate.js (v5)
 export const maxDuration = 60;
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
@@ -21,7 +21,7 @@ export default async function handler(req, res) {
       const hasTop = !!topImage;
       const hasBottom = !!bottomImage;
 
-      // 1. モデル生成用プロンプトの構築
+      // 1. 人種プロンプト
       const raceMap = { 
         'Japanese': 'fully Japanese', 
         'Caucasian': 'fully Caucasian', 
@@ -29,13 +29,14 @@ export default async function handler(req, res) {
       };
       const raceDescription = raceMap[race] || race;
 
+      // 2. モデル生成プロンプト（Imagen 4.0）
       let outfitBase = hasTop ? "thin white tight inner t-shirt" : "trendy white short-sleeve t-shirt";
       outfitBase += " and " + (hasBottom ? "thin white leggings" : "classic blue denim pants");
       const hatPrompt = hasHat ? "wearing thin white inner skull cap" : "no hat, neat hairstyle";
 
-      const modelPrompt = `A high-end professional fashion catalog studio photo of a ${raceDescription} ${gender} child, 5 years old, height 110cm. Standing confidently, full body visible. Wearing: ${outfitBase}. Head: ${hatPrompt}. Background: Minimalist light gray. F.O.KIDS style.`;
+      const modelPrompt = `A professional catalog studio photo of a ${raceDescription} ${gender} child, 5 years old, height 110cm. Standing confidently, full body visible. Wearing: ${outfitBase}. Head: ${hatPrompt}. Background: Minimalist light gray. F.O.KIDS style.`;
 
-      // 2. Imagen 4.0 でモデル画像を生成
+      // 3. Imagen 4.0 でモデル画像を生成
       const imagenRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${geminiApiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -50,21 +51,21 @@ export default async function handler(req, res) {
       }
       const modelImageBase64 = `data:image/jpeg;base64,${imagenData.predictions[0].bytesBase64Encoded}`;
 
-      // 3. Fashn.ai (tryon-max) 用の入力データを「クリーンに」構築
-      // 【重要】garment_image という単語をプロパティ名に一切使用しない
+      // 4. Fashn.ai (tryon-max) 用の入力データを「クリーンに」構築
+      // garment_image という名前の変数を一切使わず、直接リテラルで指定します
       const fashnInputs = {};
       fashnInputs["model_image"] = modelImageBase64;
 
-      // 代表画像(product_image)を決定。画像がない場合はモデル画像自体をセットしてエラー回避
-      const mainImage = topImage || bottomImage || hatImage || modelImageBase64;
-      fashnInputs["product_image"] = mainImage;
+      // product_image (必須) を決定
+      const mainProduct = topImage || bottomImage || hatImage || modelImageBase64;
+      fashnInputs["product_image"] = mainProduct;
 
-      // 各カテゴリ画像を個別に追加
+      // 各カテゴリが存在する場合のみ追加
       if (hasTop) fashnInputs["top_garment_image"] = topImage;
       if (hasBottom) fashnInputs["bottom_garment_image"] = bottomImage;
       if (hasHat) fashnInputs["hat_image"] = hatImage;
 
-      // 4. Fashn.ai リクエスト送信
+      // 5. Fashn.ai リクエスト送信
       const fashnRes = await fetch('https://api.fashn.ai/v1/run', {
         method: 'POST',
         headers: { 
