@@ -3,65 +3,41 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>F.O.KIDS Style Maker v10</title>
+  <title>F.O.KIDS v10 | DEBUG MODE</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style type="text/tailwindcss">
     body { font-family: 'Inter', -apple-system, sans-serif; }
     .drop-zone {
       @apply border-2 border-dashed border-slate-300 rounded-3xl p-4 text-center hover:bg-indigo-50 hover:border-indigo-400 transition-all cursor-pointer bg-white relative overflow-hidden min-h-[140px] flex flex-col items-center justify-center;
     }
-    .drop-zone.drag-over { @apply border-indigo-600 bg-indigo-100 ring-4 ring-indigo-50; }
-    .drop-zone * { pointer-events: none; }
     .preview-img { @apply absolute inset-0 w-full h-full object-contain p-2 bg-white; pointer-events: none; }
-    
-    .select-card {
-      @apply border-2 border-slate-100 rounded-2xl p-4 cursor-pointer transition-all hover:bg-slate-50;
-    }
-    input[type="radio"]:checked + .select-card {
-      @apply border-indigo-600 bg-indigo-50/50 shadow-sm ring-1 ring-indigo-100;
-    }
-    .step-dot { @apply w-3 h-3 rounded-full bg-slate-200 transition-all duration-500; }
-    .step-dot.active { @apply bg-indigo-600 scale-150 shadow-lg; }
+    .select-card { @apply border-2 border-slate-100 rounded-2xl p-4 cursor-pointer transition-all hover:bg-slate-50; }
+    input[type="radio"]:checked + .select-card { @apply border-indigo-600 bg-indigo-50 shadow-sm ring-1 ring-indigo-100; }
   </style>
 </head>
-<body class="bg-[#F8FAFC] min-h-screen pb-20">
+<body class="bg-slate-50 min-h-screen pb-20">
   <div class="max-w-6xl mx-auto px-6">
     <header class="py-12 flex justify-between items-end">
       <div>
-        <h1 class="text-4xl font-black text-slate-900 tracking-tighter italic">F.O.KIDS <span class="text-indigo-600">Style v10</span></h1>
-        <p class="text-slate-400 font-bold text-xs mt-2 uppercase tracking-[0.3em]">AI Stylist Professional Edition</p>
+        <h1 class="text-4xl font-black text-slate-900 tracking-tighter italic underline decoration-red-500">DEBUG MODE</h1>
+        <p class="text-slate-400 font-bold text-xs mt-2 uppercase tracking-[0.3em]">Pose & Expression Verification</p>
       </div>
-      <div class="text-right">
-        <p class="text-slate-800 font-black text-xl leading-none tracking-tighter">110cm / AGE 5</p>
-      </div>
+      <p class="text-red-500 font-black text-sm uppercase animate-pulse">Try-on Bypassed</p>
     </header>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
       <div class="lg:col-span-5 space-y-8">
-        
         <section class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-          <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Coordinate Layers</h2>
-          <div class="grid grid-cols-3 gap-4">
-            <div id="dropZoneHat" class="drop-zone"><span class="text-2xl">🧢</span><input type="file" id="hatInput" class="hidden" accept="image/*"><img id="previewHat" class="preview-img hidden"></div>
-            <div id="dropZoneTop" class="drop-zone"><span class="text-2xl">👕</span><input type="file" id="topInput" class="hidden" accept="image/*"><img id="previewTop" class="preview-img hidden"></div>
-            <div id="dropZoneBottom" class="drop-zone"><span class="text-2xl">👖</span><input type="file" id="bottomInput" class="hidden" accept="image/*"><img id="previewBottom" class="preview-img hidden"></div>
-          </div>
-        </section>
-
-        <section class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-          <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Model Directing</h2>
-          
           <div class="space-y-6">
             <div>
-              <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 ml-1">Pose & Action</p>
+              <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 ml-1">Pose Selection</p>
               <div class="grid grid-cols-2 gap-3">
-                <label><input type="radio" name="pose" value="natural_lean" class="hidden" checked><div class="select-card text-center"><p class="text-xs font-bold text-slate-800">自然な立ち姿</p><p class="text-[9px] text-slate-400 mt-1">重心をずらしたラフな姿勢</p></div></label>
-                <label><input type="radio" name="pose" value="walking_snapshot" class="hidden"><div class="select-card text-center"><p class="text-xs font-bold text-slate-800">歩き出し</p><p class="text-[9px] text-slate-400 mt-1">躍動感のあるスナップ風</p></div></label>
-                <label><input type="radio" name="pose" value="energetic_jump" class="hidden"><div class="select-card text-center"><p class="text-xs font-bold text-slate-800">ジャンプ</p><p class="text-[9px] text-slate-400 mt-1">元気いっぱいの空中ポーズ</p></div></label>
-                <label><input type="radio" name="pose" value="looking_away" class="hidden"><div class="select-card text-center"><p class="text-xs font-bold text-slate-800">目線外し</p><p class="text-[9px] text-slate-400 mt-1">作り込まない自然な瞬間</p></div></label>
+                <label><input type="radio" name="pose" value="natural_lean" class="hidden" checked><div class="select-card text-center"><p class="text-xs font-bold text-slate-800">自然な立ち姿</p></div></label>
+                <label><input type="radio" name="pose" value="walking_snapshot" class="hidden"><div class="select-card text-center"><p class="text-xs font-bold text-slate-800">歩き出し</p></div></label>
+                <label><input type="radio" name="pose" value="energetic_jump" class="hidden"><div class="select-card text-center"><p class="text-xs font-bold text-slate-800">ジャンプ</p></div></label>
+                <label><input type="radio" name="pose" value="looking_away" class="hidden"><div class="select-card text-center"><p class="text-xs font-bold text-slate-800">目線外し</p></div></label>
               </div>
             </div>
-
             <div>
               <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 ml-1">Expression</p>
               <div class="grid grid-cols-3 gap-2">
@@ -73,155 +49,75 @@
           </div>
         </section>
 
-        <button id="generateBtn" class="w-full bg-slate-900 text-white py-6 rounded-[2rem] font-black text-lg hover:bg-indigo-600 transition-all shadow-2xl active:scale-95 disabled:opacity-50">
-          全アイテムを自動合成
+        <button id="generateBtn" class="w-full bg-red-600 text-white py-6 rounded-[2rem] font-black text-lg hover:bg-red-700 transition-all shadow-2xl active:scale-95">
+          ポーズの精度を確認する
         </button>
       </div>
 
       <div class="lg:col-span-7">
         <div id="resultCard" class="bg-white p-3 rounded-[3rem] shadow-2xl border border-slate-200 flex flex-col items-center justify-center min-h-[720px] relative overflow-hidden">
-          
-          <div id="placeholder" class="text-center p-12">
-            <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg class="w-8 h-8 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-            </div>
-            <p class="text-slate-400 font-bold tracking-widest text-[10px] uppercase">Awaiting creation</p>
+          <div id="loading" class="hidden text-center">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-red-500 border-t-transparent mb-4"></div>
+            <p class="font-black text-slate-900 text-xl tracking-tighter">Imagen 4.0 描画中...</p>
           </div>
-
-          <div id="loading" class="hidden text-center z-10 px-10">
-            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent mb-8"></div>
-            <p id="statusLabel" class="font-black text-slate-900 text-2xl tracking-tighter italic">BUILDING MODEL...</p>
-            <div class="flex justify-center gap-4 mt-8">
-              <div id="dot0" class="step-dot"></div>
-              <div id="dot1" class="step-dot"></div>
-              <div id="dot2" class="step-dot"></div>
-              <div id="dot3" class="step-dot"></div>
-            </div>
-          </div>
-
           <img id="resultImg" class="hidden w-full h-auto rounded-[2.5rem]">
-          
-          <button id="downloadBtn" class="hidden absolute bottom-10 right-10 bg-white shadow-2xl p-6 rounded-full border border-slate-100 text-slate-900 hover:scale-110 transition-transform">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-          </button>
+          <div id="placeholder" class="text-slate-300 font-bold uppercase tracking-widest text-xs">Verify Pose & Body Scale</div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    const state = { hat: null, top: null, bottom: null };
-
-    // 全域ドラッグ＆ドロップ停止
-    window.addEventListener("dragover", e => e.preventDefault(), false);
-    window.addEventListener("drop", e => e.preventDefault(), false);
-
-    function setupUpload(inputId, dropId, previewId, key) {
-      const input = document.getElementById(inputId), drop = document.getElementById(dropId), preview = document.getElementById(previewId);
-      const handleFile = (file) => {
-        if (!file || !file.type.startsWith('image/')) return;
-        const reader = new FileReader();
-        reader.onload = (e) => { 
-          state[key] = e.target.result; 
-          preview.src = e.target.result; 
-          preview.classList.remove('hidden'); 
-          drop.classList.add('border-indigo-400'); 
-        };
-        reader.readAsDataURL(file);
-      };
-      drop.onclick = () => input.click();
-      input.onchange = e => handleFile(e.target.files[0]);
-      drop.ondragover = e => { e.preventDefault(); e.stopPropagation(); drop.classList.add('drag-over'); };
-      drop.ondragleave = e => { e.preventDefault(); e.stopPropagation(); drop.classList.remove('drag-over'); };
-      drop.ondrop = e => { e.preventDefault(); e.stopPropagation(); drop.classList.remove('drag-over'); if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); };
-    }
-
-    setupUpload('hatInput', 'dropZoneHat', 'previewHat', 'hat');
-    setupUpload('topInput', 'dropZoneTop', 'previewTop', 'top');
-    setupUpload('bottomInput', 'dropZoneBottom', 'previewBottom', 'bottom');
-
     const generateBtn = document.getElementById('generateBtn');
-    const statusLabel = document.getElementById('statusLabel');
-
-    async function processSequentially(currentModel, tasks, total) {
-      if (tasks.length === 0) {
-        document.getElementById('resultImg').src = currentModel;
-        document.getElementById('resultImg').classList.remove('hidden');
-        document.getElementById('loading').classList.add('hidden');
-        document.getElementById('downloadBtn').classList.remove('hidden');
-        generateBtn.disabled = false;
-        return;
-      }
-
-      const task = tasks.shift();
-      const currentStep = total - tasks.length;
-      document.querySelectorAll('.step-dot').forEach((d, i) => d.classList.toggle('active', i === currentStep));
-      statusLabel.innerText = `${task.label}を合成中`;
-
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'start', modelImage: currentModel, productPreview: task.image, category: task.category })
-      });
-      const { jobId } = await res.json();
-
-      const timer = setInterval(async () => {
-        const sRes = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'status', jobId }) });
-        const sData = await sRes.json();
-        if (sData.status === 'completed') {
-          clearInterval(timer);
-          processSequentially(sData.output[0], tasks, total);
-        } else if (sData.status === 'failed') {
-          clearInterval(timer);
-          alert("合成に失敗しました。");
-          location.reload();
-        }
-      }, 4000);
-    }
+    const resultImg = document.getElementById('resultImg');
+    const loading = document.getElementById('loading');
+    const placeholder = document.getElementById('placeholder');
 
     generateBtn.onclick = async () => {
       const pose = document.querySelector('input[name="pose"]:checked').value;
       const expression = document.querySelector('input[name="expression"]:checked').value;
 
-      document.getElementById('placeholder').classList.add('hidden');
-      document.getElementById('resultImg').classList.add('hidden');
-      document.getElementById('downloadBtn').classList.add('hidden');
-      document.getElementById('loading').classList.remove('hidden');
+      placeholder.classList.add('hidden');
+      resultImg.classList.add('hidden');
+      loading.classList.remove('hidden');
       generateBtn.disabled = true;
 
-      document.querySelectorAll('.step-dot').forEach((d, i) => d.classList.toggle('active', i === 0));
-      statusLabel.innerText = "ベースモデルを生成中";
-
       try {
+        // 1. モデル生成
         const res = await fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'create_model', pose, expression, hasHat: !!state.hat, hasTop: !!state.top, hasBottom: !!state.bottom })
+          body: JSON.stringify({ action: 'create_model', pose, expression })
         });
         const { modelImage } = await res.json();
 
-        const tasks = [];
-        // 高精度化のためボトムス -> トップス -> 帽子の順序で合成
-        if (state.bottom) tasks.push({ image: state.bottom, category: "bottoms", label: "ボトムス" });
-        if (state.top) tasks.push({ image: state.top, category: "tops", label: "トップス" });
-        if (state.hat) tasks.push({ image: state.hat, category: "accessories", label: "帽子" });
+        // 2. デバッグバイパス（合成せず即座に表示）
+        const startRes = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'start', modelImage })
+        });
+        const { debugImage } = await startRes.json();
 
-        if (tasks.length === 0) {
-          document.getElementById('resultImg').src = modelImage;
-          document.getElementById('resultImg').classList.remove('hidden');
-          document.getElementById('loading').classList.add('hidden');
+        // 3. ステータス確認（デバッグ用即時完了）
+        const statusRes = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'status', debugImage })
+        });
+        const sData = await statusRes.json();
+
+        if (sData.status === 'completed') {
+          resultImg.src = sData.output[0];
+          resultImg.classList.remove('hidden');
+          loading.classList.add('hidden');
           generateBtn.disabled = false;
-        } else {
-          processSequentially(modelImage, tasks, tasks.length);
         }
-      } catch (e) { alert("生成エラーが発生しました。"); location.reload(); }
-    };
-
-    document.getElementById('downloadBtn').onclick = () => {
-      const a = document.createElement('a');
-      a.href = document.getElementById('resultImg').src;
-      a.download = `fokids-catalog-v10-${Date.now()}.jpg`;
-      a.click();
+      } catch (e) {
+        alert("生成エラー");
+        generateBtn.disabled = false;
+        loading.classList.add('hidden');
+      }
     };
   </script>
 </body>
