@@ -1,4 +1,4 @@
-// api/generate.js (v16 - Physics, Shadows & Detail Refinement)
+// api/generate.js (v16 Logic - Physics, Shadows, Footwear & Candid Refinement)
 export const maxDuration = 60;
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
@@ -14,31 +14,30 @@ export default async function handler(req, res) {
       const poseMap = {
         'natural_lean': 'leaning naturally on one leg, body and feet facing forward, knees facing front, relaxed posture, natural relaxed fingers',
         'walking_snapshot': 'natural walking motion, body facing forward, natural step, knees bending correctly forward, natural hand movement',
-        // 修正：指先の補正と、ジャンプ時の影の指示を追加
         'energetic_jump': 'dynamic mid-air jump with pure excitement, body facing camera, correct joint alignment, natural relaxed fingers. IMPORTANT: Add a realistic soft drop shadow on the floor directly below the boy to indicate height in the air.',
-        'looking_away': 'standing with body and legs facing forward, knees clearly facing front, ONLY the head is turned to the side looking away, strictly NO eye contact, relaxed hands'
+        'looking_away': 'standing with body and legs facing forward, knees clearly facing front, ONLY the head is turned to the side looking away, strictly NO eye contact, head turned profile view'
       };
 
       const expMap = {
-        'beaming_smile': 'beaming candid smile, eyes crinkling, mouth open laughing',
-        'mischievous': 'mischievous grin, sparkling eyes',
-        'calm_relaxed': 'soft relaxed expression, natural mouth, peaceful look'
+        'beaming_smile': 'beaming candid smile, eyes crinkling, mouth open laughing, very genuine',
+        'mischievous': 'mischievous playful grin, sparkling eyes, energetic personality',
+        'calm_relaxed': 'soft relaxed neutral expression, natural mouth, peaceful look, staring into the distance'
       };
 
       const posePrompt = poseMap[pose] || poseMap['natural_lean'];
       const expPrompt = expMap[expression] || expMap['beaming_smile'];
 
+      // 素体プロンプト：ボトムスへの食い込みを防ぐために「薄いタイトなインナー」を指定
       let outfit = hasTop ? "ultra-thin skin-tight white sleeveless base layer" : "minimalistic slim white tee";
       outfit += " and " + (hasBottom ? "thin skin-tight white leggings" : "simple shorts");
 
-      // 修正：靴のつま先のディテール指定（ラバーキャップ排除）
       const prompt = `A professional CANDID fashion catalog photo of a 5-year-old Japanese boy, 110cm tall. 
-        ANATOMY: Perfect anatomical proportions, correct head-to-body ratio, hands with five distinct fingers, knees and feet facing forward.
+        ANATOMY: Perfect anatomical proportions, correct head-to-body ratio for a 5-year-old (no oversized head), knees and feet must face the correct natural direction.
         POSE: ${posePrompt}. 
         EXPRESSION: ${expPrompt}. 
         WEARING: ${outfit}. 
-        FOOTWEAR: Wearing classic black canvas slip-on sneakers with thick white soles. (Strictly NO white rubber toe caps, purely black canvas top).
-        STYLE: Soft studio lighting, realistic skin textures, minimalist light gray background. F.O.KIDS brand mood.`;
+        FOOTWEAR: Wearing classic black canvas slip-on sneakers with thick white soles. (Strictly NO white rubber toe caps).
+        STYLE: Soft studio lighting, realistic skin, minimalist light gray background. F.O.KIDS brand mood.`;
 
       const imagenRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${geminiKey}`, {
         method: 'POST',
@@ -54,14 +53,13 @@ export default async function handler(req, res) {
       
       let instruction = "";
       if (category === "tops") {
-        // 修正：ジャンプ時は裾を浮かせる指示を追加
         if (pose === 'energetic_jump') {
           instruction = "The shirt MUST be worn loose and UNTUCKED. The hem should be slightly LIFTING UP and flowing naturally as if caught in the motion of a jump.";
         } else {
-          instruction = "The shirt MUST be worn loose and UNTUCKED, hanging over the waistband naturally.";
+          instruction = "The shirt MUST be worn loose and UNTUCKED, hanging over the waistband naturally with soft folds and drapes.";
         }
       } else if (category === "bottoms") {
-        instruction = "The pants should have natural fabric folds. Ensure the front of the pants aligns correctly with the front-facing knees.";
+        instruction = "The pants should have natural fabric folds. Ensure the front of the pants aligns correctly with the front-facing knees. No reversed legs.";
       } else {
         instruction = "Realistic hat placement on the head, scaled correctly.";
       }
