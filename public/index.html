@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>F.O.KIDS Style Maker v13</title>
+  <title>F.O.KIDS Style Maker v14</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style type="text/tailwindcss">
     body { font-family: 'Inter', -apple-system, sans-serif; }
@@ -20,7 +20,7 @@
 <body class="bg-[#F8FAFC] min-h-screen pb-20">
   <div class="max-w-6xl mx-auto px-6">
     <header class="py-12 flex justify-between items-end">
-      <h1 class="text-4xl font-black text-slate-900 tracking-tighter italic">F.O.KIDS <span class="text-indigo-600">Style v13</span></h1>
+      <h1 class="text-4xl font-black text-slate-900 tracking-tighter italic">F.O.KIDS <span class="text-indigo-600">Style v14</span></h1>
       <p class="text-slate-800 font-black text-xl tracking-tighter">110cm / AGE 5</p>
     </header>
 
@@ -131,7 +131,7 @@
       const expression = document.querySelector('input[name="expression"]:checked').value;
       document.getElementById('placeholder').classList.add('hidden'); resultImg.classList.add('hidden'); loading.classList.remove('hidden'); generateBtn.disabled = true;
       document.querySelectorAll('.step-dot').forEach((d, i) => d.classList.toggle('active', i === 0));
-      statusLabel.innerText = "ベースモデル生成中";
+      statusLabel.innerText = "ベースモデル(骨格)生成中";
 
       try {
         const res = await fetch('/api/generate', {
@@ -151,6 +151,13 @@
             processSequentially(modelImage, tasks, tasks.length);
         }
       } catch (e) { alert("エラー"); generateBtn.disabled = false; loading.classList.add('hidden'); }
+    };
+    
+    document.getElementById('downloadBtn').onclick = () => {
+      const a = document.createElement('a');
+      a.href = document.getElementById('resultImg').src;
+      a.download = `fokids-v14-${Date.now()}.jpg`;
+      a.click();
     };
   </script>
 </body>
