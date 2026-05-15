@@ -64,7 +64,7 @@
               <label><input type="radio" name="pose" value="natural_lean" class="hidden" checked><div class="select-card text-center text-xs font-bold">自然な立ち姿</div></label>
               <label><input type="radio" name="pose" value="walking_snapshot" class="hidden"><div class="select-card text-center text-xs font-bold">歩き出し</div></label>
               <label><input type="radio" name="pose" value="energetic_jump" class="hidden"><div class="select-card text-center text-xs font-bold">ジャンプ</div></label>
-              <label><input type="radio" name="pose" value="looking_away" class="hidden"><div class="select-card text-center text-xs font-bold text-blue-600">目線外し</div></label>
+              <label><input type="radio" name="pose" value="looking_away" class="hidden"><div class="select-card text-center text-xs font-bold">目線外し</div></label>
             </div>
           </div>
           <div>
@@ -123,7 +123,6 @@
 
     const generateBtn = document.getElementById('generateBtn'), statusLabel = document.getElementById('statusLabel'), resultImg = document.getElementById('resultImg'), loading = document.getElementById('loading');
 
-    // 修正: タイムアウト処理（フリーズ対策）を組み込んだ processSequentially
     async function processSequentially(currentModel, tasks, total, selectedPose) {
       if (tasks.length === 0) {
         resultImg.src = currentModel; resultImg.classList.remove('hidden'); loading.classList.add('hidden');
@@ -217,7 +216,6 @@
       }
     };
     
-    // 修正: 強制ダウンロード（画像だけが別タブで開くのを防ぐ）
     document.getElementById('downloadBtn').onclick = async () => {
       try {
         const imageSrc = document.getElementById('resultImg').src;
