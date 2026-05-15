@@ -14,7 +14,6 @@ export default async function handler(req, res) {
     if (action === 'start') {
       const { hatImage, topImage, bottomImage, gender, race } = req.body;
 
-      // 各アイテムの有無
       const hasHat = !!hatImage;
       const hasTop = !!topImage;
       const hasBottom = !!bottomImage;
@@ -27,19 +26,17 @@ export default async function handler(req, res) {
       };
       const raceDescription = raceMap[race] || race;
 
-      // 2. モデルの初期状態（ベース）を構築
-      // 画像がないアイテムはプロンプトで「着用済み」として生成させる
+      // 2. モデルの初期状態プロンプト構築
       let outfitBase = "";
-      outfitBase += hasTop ? "a thin white inner t-shirt" : "a trendy white short-sleeve t-shirt";
+      outfitBase += hasTop ? "a thin white tight-fitting inner t-shirt" : "a trendy white short-sleeve t-shirt";
       outfitBase += " and ";
-      outfitBase += hasBottom ? "white slim leggings" : "classic blue denim pants with a natural washed texture";
+      outfitBase += hasBottom ? "thin white leggings" : "classic blue denim pants with a natural washed texture";
       
-      const hatPrompt = hasHat ? "bareheaded (as a base for hat overlay)" : "no hat, neat and cool hairstyle";
+      const hatPrompt = hasHat ? "wearing a thin white inner skull cap" : "no hat, neat and cool hairstyle";
 
-      // 3. Imagen 4.0 プロンプト: カタログ品質の110cmキッズを生成
-      const modelPrompt = `A high-end professional fashion catalog photograph of a ${raceDescription} ${gender} child, 5 years old, height 110cm. The child has an energetic expression and a natural smile. Posture: Standing confidently facing forward, arms relaxed, full body visible. Wearing: ${outfitBase}. Head: ${hatPrompt}. Background: Minimalist clean light gray studio. High resolution, commercial lighting, realistic skin and fabric textures. F.O.KIDS style.`;
+      const modelPrompt = `A high-end professional fashion catalog photograph of a ${raceDescription} ${gender} child, 5 years old, height 110cm. The child has an energetic expression and a natural smile. Posture: Standing confidently facing forward, full body visible. Wearing: ${outfitBase}. Head: ${hatPrompt}. Background: Minimalist clean light gray studio. High resolution, commercial lighting, realistic fabric textures. F.O.KIDS style.`;
 
-      // 4. Imagen 4.0 リクエスト (Google Generative AI)
+      // 3. Imagen 4.0 リクエスト
       const imagenRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${geminiApiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -54,14 +51,16 @@ export default async function handler(req, res) {
       }
       const modelImageBase64 = `data:image/jpeg;base64,${imagenData.predictions[0].bytesBase64Encoded}`;
 
-      // 5. Fashn.ai (tryon-max) でアイテムを合成
-      const fashnInputs = { model_image: modelImageBase64 };
+      // 4. Fashn.ai (tryon-max) 合成設定
+      // 【修正箇所】tryon-maxモデルでは 'product_image' が必須、'garment_image' は禁止
+      const fashnInputs = { 
+        model_image: modelImageBase64,
+        product_image: topImage || bottomImage || hatImage // いずれか存在するものを代表画像として設定
+      };
+
       if (hasTop) fashnInputs.top_garment_image = topImage;
       if (hasBottom) fashnInputs.bottom_garment_image = bottomImage;
       if (hasHat) fashnInputs.hat_image = hatImage;
-      
-      // tryon-maxモデルは garment_image (必須) にどれか一つを指定
-      fashnInputs.garment_image = topImage || bottomImage || hatImage || modelImageBase64;
 
       const fashnRes = await fetch('https://api.fashn.ai/v1/run', {
         method: 'POST',
