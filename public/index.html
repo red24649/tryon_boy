@@ -24,11 +24,11 @@
   <div class="max-w-5xl mx-auto">
     <header class="text-center mb-10">
       <h1 class="text-4xl font-black text-slate-800 tracking-tighter">男児着画生成メーカー</h1>
-      <p class="text-slate-500 mt-2">4-6歳 (110cm) F.O.KIDS スタイル着画生成システム</p>
+      <p class="text-slate-500 mt-2 font-medium">4-6歳 (110cm) F.O.KIDS スタイル着画生成システム</p>
     </header>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-      <!-- 左側：設定パネル -->
+      <!-- 設定パネル -->
       <div class="lg:col-span-5 space-y-6">
         <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
           <h2 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
@@ -88,7 +88,7 @@
         </div>
       </div>
 
-      <!-- 右側：結果表示 -->
+      <!-- 結果表示 -->
       <div class="lg:col-span-7 flex flex-col h-full">
         <div id="resultCard" class="bg-white p-2 rounded-3xl shadow-sm border border-slate-200 flex-grow flex items-center justify-center min-h-[500px] relative">
           <div id="placeholder" class="text-center p-8">
@@ -105,7 +105,7 @@
             <p class="text-slate-400 text-sm mt-2">F.O.KIDSスタイルのモデルを生成しています</p>
           </div>
 
-          <img id="resultImg" class="hidden w-full h-auto rounded-2xl">
+          <img id="resultImg" class="hidden w-full h-auto rounded-2xl shadow-inner">
           
           <button id="downloadBtn" class="hidden absolute bottom-6 right-6 bg-white shadow-xl p-4 rounded-full border border-slate-100 text-slate-700 hover:scale-110 transition-transform">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -186,7 +186,7 @@
             hatImage: state.hat,
             topImage: state.top,
             bottomImage: state.bottom,
-            gender: 'boy', // 固定または選択肢追加
+            gender: 'boy',
             race: race
           })
         });
@@ -212,7 +212,7 @@
             generateBtn.disabled = false;
             generateBtn.innerText = "着画を生成する";
             document.getElementById('downloadBtn').classList.remove('hidden');
-          } else if (sData.status === 'failed' || attempts > 40) {
+          } else if (sData.status === 'failed' || attempts > 50) {
             clearInterval(checkStatus);
             alert('生成に失敗しました。時間をおいて再度お試しください。');
             loading.classList.add('hidden');
