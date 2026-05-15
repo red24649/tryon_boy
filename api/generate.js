@@ -1,4 +1,4 @@
-// api/generate.js (v19 - Drape & Shadow Enhancement)
+// api/generate.js (v20 - Subtle Off-Camera Gaze & Physics Optimization)
 export const maxDuration = 60;
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
@@ -12,16 +12,18 @@ export default async function handler(req, res) {
       const { pose, expression, hasHat, hasTop, hasBottom } = req.body;
       
       const poseMap = {
-        'natural_lean': 'leaning naturally on one leg, body and feet facing forward, knees facing front, relaxed posture, natural relaxed fingers with distinct nails',
-        'walking_snapshot': 'natural walking motion, body facing forward, natural step, knees bending correctly forward, natural hand movement',
-        'energetic_jump': 'dynamic mid-air jump with pure excitement, body facing camera, correct joint alignment, natural relaxed fingers. IMPORTANT: Add a realistic soft drop shadow on the floor directly below the boy to indicate height in the air.',
+        // 微妙に視線を外す（subtle off-camera gaze）を追加
+        'natural_lean': 'leaning naturally on one leg, body and feet facing forward, knees facing front, relaxed posture, natural relaxed fingers with distinct nails, subtle off-camera gaze (not staring directly at the lens)',
+        'walking_snapshot': 'natural walking motion, body facing forward, natural step, knees bending correctly forward, natural hand movement, subtle off-camera gaze (not staring directly at the lens)',
+        'energetic_jump': 'dynamic mid-air jump with pure excitement, body facing camera, correct joint alignment, natural relaxed fingers, subtle off-camera gaze (not staring directly at the lens). IMPORTANT: Add a realistic soft drop shadow on the floor directly below the boy to indicate height in the air.',
+        // 既存の完全な目線外し（横顔に近い）
         'looking_away': 'standing with body and legs facing forward, knees clearly facing front, ONLY the head is turned to the side looking away, strictly NO eye contact, head turned profile view'
       };
 
       const expMap = {
         'beaming_smile': 'beaming candid smile, eyes crinkling, mouth open laughing, very genuine',
         'mischievous': 'mischievous playful grin, sparkling eyes, energetic personality',
-        'calm_relaxed': 'soft relaxed neutral expression, natural mouth, peaceful look, staring into the distance'
+        'calm_relaxed': 'soft relaxed neutral expression, natural mouth, peaceful look, staring slightly into the distance'
       };
 
       const posePrompt = poseMap[pose] || poseMap['natural_lean'];
@@ -52,7 +54,6 @@ export default async function handler(req, res) {
       
       let instruction = "";
       if (category === "tops") {
-        // 修正: シワ(wrinkles)と立体的な陰影(3D lighting)を強調。張り付き感(flat appearance)を否定
         const fitInstruction = "The shirt MUST be correctly scaled to perfectly fit the 110cm child's body. The fabric must drape naturally, creating highly realistic WRINKLES, folds, and deep 3D shadows across the chest and torso. Avoid a flat, pasted-on appearance. The lighting on the shirt must match the studio lighting on the child. Ensure the hem is worn loose and absolutely UNTUCKED.";
         
         if (pose === 'energetic_jump') {
@@ -73,7 +74,6 @@ export default async function handler(req, res) {
           model_name: "tryon-max",
           inputs: { "model_image": modelImage, "product_image": productPreview },
           category: category,
-          // 修正: 張り付き感を減らし、立体感の生成を優先するためにガイダンススケールを下げる(3.5 -> 2.8)
           guidance_scale: 2.8,
           timesteps: 50,
           long_description: instruction
