@@ -12,11 +12,9 @@ export default async function handler(req, res) {
       const { pose, expression, hasHat, hasTop, hasBottom } = req.body;
       
       const poseMap = {
-        // 微妙に視線を外す（subtle off-camera gaze）を追加
         'natural_lean': 'leaning naturally on one leg, body and feet facing forward, knees facing front, relaxed posture, natural relaxed fingers with distinct nails, subtle off-camera gaze (not staring directly at the lens)',
         'walking_snapshot': 'natural walking motion, body facing forward, natural step, knees bending correctly forward, natural hand movement, subtle off-camera gaze (not staring directly at the lens)',
         'energetic_jump': 'dynamic mid-air jump with pure excitement, body facing camera, correct joint alignment, natural relaxed fingers, subtle off-camera gaze (not staring directly at the lens). IMPORTANT: Add a realistic soft drop shadow on the floor directly below the boy to indicate height in the air.',
-        // 既存の完全な目線外し（横顔に近い）
         'looking_away': 'standing with body and legs facing forward, knees clearly facing front, ONLY the head is turned to the side looking away, strictly NO eye contact, head turned profile view'
       };
 
