@@ -1,4 +1,4 @@
-// api/generate.js (v13 - Natural Style & Un-tucked Hem Optimization)
+// api/generate.js (v14 - Anatomy & Proportion Fix)
 export const maxDuration = 60;
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
@@ -11,30 +11,32 @@ export default async function handler(req, res) {
     if (action === 'create_model') {
       const { pose, expression, hasHat, hasTop, hasBottom } = req.body;
       
+      // 関節のねじれを防ぐため、体と足の向き（facing forward）を徹底して固定
       const poseMap = {
-        'natural_lean': 'leaning naturally on one leg, body slightly angled away, relaxed casual pose',
-        'walking_snapshot': 'natural walking motion, captured candidly, looking away from camera',
-        'energetic_jump': 'dynamic jump, playful, spontaneous moment',
-        'looking_away': 'looking away from the camera, head turned to the side, profile or three-quarter view, strictly NO eye contact, candid snapshot'
+        'natural_lean': 'leaning naturally on one leg, body and feet facing forward, knees facing front, relaxed posture',
+        'walking_snapshot': 'natural walking motion, body facing forward, natural step, knees bending correctly forward',
+        'energetic_jump': 'dynamic jump, body facing camera, correct joint alignment',
+        // 目線外し時の体のねじれバグを防止
+        'looking_away': 'standing with body and legs facing forward, knees clearly facing front, ONLY the head is turned to the side looking away, strictly NO eye contact'
       };
 
       const expMap = {
         'beaming_smile': 'beaming candid smile, eyes crinkling, mouth open laughing',
         'mischievous': 'mischievous grin, sparkling eyes',
-        'calm_relaxed': 'soft relaxed expression, natural mouth, peaceful look, staring into the distance'
+        'calm_relaxed': 'soft relaxed expression, natural mouth, peaceful look'
       };
 
       const posePrompt = poseMap[pose] || poseMap['natural_lean'];
       const expPrompt = expMap[expression] || expMap['beaming_smile'];
 
-      // 素体プロンプト：ボトムスへの食い込みを防ぐために「薄いタイトなインナー」を指定
       let outfit = hasTop ? "ultra-thin skin-tight white sleeveless base layer" : "minimalistic slim white tee";
       outfit += " and " + (hasBottom ? "thin skin-tight white leggings" : "simple shorts");
 
+      // 頭の肥大化と関節異常を防ぐ強力な制約（ANATOMY）を追加
       const prompt = `A professional CANDID fashion catalog photo of a 5-year-old Japanese boy, 110cm tall. 
+        ANATOMY: Perfect anatomical proportions, correct head-to-body ratio for a 5-year-old (no oversized head), knees and feet must face the correct natural direction.
         POSE: ${posePrompt}. 
         EXPRESSION: ${expPrompt}. 
-        IMPORTANT: The boy is NOT looking at the camera. Authentic child behavior.
         WEARING: ${outfit}. 
         STYLE: Soft studio lighting, realistic skin, minimalist light gray background. F.O.KIDS brand mood.`;
 
@@ -50,14 +52,15 @@ export default async function handler(req, res) {
     if (action === 'start') {
       const { modelImage, productPreview, category } = req.body;
       
-      // 着せ込み時の物理整合性を高める指示
+      // 合成時にも物理的におかしくならないよう指示
       let instruction = "";
       if (category === "tops") {
-        instruction = "The shirt MUST be worn loose and UNTUCKED, hanging over the waistband of the pants naturally with soft folds and drapes.";
+        instruction = "The shirt MUST be worn loose and UNTUCKED, hanging over the waistband naturally.";
       } else if (category === "bottoms") {
-        instruction = "The pants should have natural fabric folds at the knees. Ensure the orientation is correct (facing front/side as the model).";
+        // パンツの前後逆転を防ぐ
+        instruction = "The pants should have natural fabric folds. IMPORTANT: Ensure the front of the pants aligns correctly with the front-facing knees. No reversed legs.";
       } else {
-        instruction = "Realistic hat placement on the head.";
+        instruction = "Realistic hat placement on the head, scaled correctly.";
       }
 
       const fashnRes = await fetch('https://api.fashn.ai/v1/run', {
