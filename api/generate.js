@@ -1,4 +1,4 @@
-// api/generate.js (v18 - Precision Fit, Anatomy & Physics Optimization)
+// api/generate.js
 export const maxDuration = 60;
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
@@ -27,11 +27,9 @@ export default async function handler(req, res) {
       const posePrompt = poseMap[pose] || poseMap['natural_lean'];
       const expPrompt = expMap[expression] || expMap['beaming_smile'];
 
-      // 素体プロンプト：ボトムスへの食い込みを防ぐために「薄いタイトなインナー」を指定
       let outfit = hasTop ? "ultra-thin skin-tight white sleeveless base layer" : "minimalistic slim white tee";
       outfit += " and " + (hasBottom ? "thin skin-tight white leggings" : "simple shorts");
 
-      // 修正：Anatomyの指示をさらに強化し、衣服のスケール感をImagenにも盛り込む
       const prompt = `A professional CANDID fashion catalog photo of a 5-year-old Japanese boy, 110cm tall. 
         ANATOMY: Perfect anatomical proportions, correct head-to-body ratio for a 5-year-old (no oversized head), knees and feet must face the correct natural direction, natural relaxed fingers with distinct nails. The clothing must be correctly scaled to fit this 110cm body, not appearing oversized.
         POSE: ${posePrompt}. 
@@ -54,13 +52,12 @@ export default async function handler(req, res) {
       
       let instruction = "";
       if (category === "tops") {
-        // 修正：長袖Tシャツの張り付きとサイズ感の解消
-        const fitInstruction = "The shirt MUST be correctly scaled to perfectly fit the 110cm child's body. The hem should end at the waist, and the sleeves at the wrist, without appearing oversized or too long. The fabric must drape naturally, creating natural folds, drapes, and 3D shadows on the child's body, avoiding a flat, pasted-on appearance. Integrate realistic fabric physics.";
+        const fitInstruction = "The shirt MUST be correctly scaled to perfectly fit the 110cm child's body. The fabric must drape naturally, creating natural folds, drapes, and 3D shadows on the child's body. Ensure the hem is worn loose and absolutely UNTUCKED.";
         
         if (pose === 'energetic_jump') {
-          instruction = `The shirt MUST be correctly scaled and worn loose. The hem should end at the waist, and the sleeves at the wrist. Both should be slightly LIFTING UP and flowing naturally as if caught in the motion of a jump. Fabric physics and drapes must be realistic. ${fitInstruction}`;
+          instruction = `The hem should end at the waist, and the sleeves at the wrist. Both should be slightly LIFTING UP and flowing naturally as if caught in the motion of a jump. ${fitInstruction}`;
         } else {
-          instruction = `The shirt MUST be correctly scaled and worn loose. The hem should end at the waist, and the sleeves at the wrist, without being tucked in. Fabric physics must create natural 3D folds and shadows. ${fitInstruction}`;
+          instruction = `The hem should end at the waist, and the sleeves at the wrist. ${fitInstruction}`;
         }
       } else if (category === "bottoms") {
         instruction = "The pants should have natural fabric folds. Ensure the front of the pants aligns correctly with the front-facing knees. Scale correctly to the child's legs.";
@@ -77,7 +74,7 @@ export default async function handler(req, res) {
           category: category,
           guidance_scale: 3.5,
           timesteps: 50,
-          long_description: instruction // 修正した指示を使用
+          long_description: instruction
         })
       });
       const fashnData = await fashnRes.json();
