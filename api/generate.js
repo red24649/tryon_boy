@@ -1,4 +1,4 @@
-// api/generate.js (v16 Logic - Physics, Shadows, Footwear & Candid Refinement)
+// api/generate.js (v18 - Precision Fit, Anatomy & Physics Optimization)
 export const maxDuration = 60;
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
@@ -12,7 +12,7 @@ export default async function handler(req, res) {
       const { pose, expression, hasHat, hasTop, hasBottom } = req.body;
       
       const poseMap = {
-        'natural_lean': 'leaning naturally on one leg, body and feet facing forward, knees facing front, relaxed posture, natural relaxed fingers',
+        'natural_lean': 'leaning naturally on one leg, body and feet facing forward, knees facing front, relaxed posture, natural relaxed fingers with distinct nails',
         'walking_snapshot': 'natural walking motion, body facing forward, natural step, knees bending correctly forward, natural hand movement',
         'energetic_jump': 'dynamic mid-air jump with pure excitement, body facing camera, correct joint alignment, natural relaxed fingers. IMPORTANT: Add a realistic soft drop shadow on the floor directly below the boy to indicate height in the air.',
         'looking_away': 'standing with body and legs facing forward, knees clearly facing front, ONLY the head is turned to the side looking away, strictly NO eye contact, head turned profile view'
@@ -31,13 +31,14 @@ export default async function handler(req, res) {
       let outfit = hasTop ? "ultra-thin skin-tight white sleeveless base layer" : "minimalistic slim white tee";
       outfit += " and " + (hasBottom ? "thin skin-tight white leggings" : "simple shorts");
 
+      // 修正：Anatomyの指示をさらに強化し、衣服のスケール感をImagenにも盛り込む
       const prompt = `A professional CANDID fashion catalog photo of a 5-year-old Japanese boy, 110cm tall. 
-        ANATOMY: Perfect anatomical proportions, correct head-to-body ratio for a 5-year-old (no oversized head), knees and feet must face the correct natural direction.
+        ANATOMY: Perfect anatomical proportions, correct head-to-body ratio for a 5-year-old (no oversized head), knees and feet must face the correct natural direction, natural relaxed fingers with distinct nails. The clothing must be correctly scaled to fit this 110cm body, not appearing oversized.
         POSE: ${posePrompt}. 
         EXPRESSION: ${expPrompt}. 
         WEARING: ${outfit}. 
-        FOOTWEAR: Wearing classic black canvas slip-on sneakers with thick white soles. (Strictly NO white rubber toe caps).
-        STYLE: Soft studio lighting, realistic skin, minimalist light gray background. F.O.KIDS brand mood.`;
+        FOOTWEAR: Wearing classic black canvas slip-on sneakers with thick white soles. (Strictly NO white rubber toe caps, purely black canvas top).
+        STYLE: Soft studio lighting, realistic skin textures, minimalist light gray background. F.O.KIDS brand mood.`;
 
       const imagenRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${geminiKey}`, {
         method: 'POST',
@@ -53,13 +54,16 @@ export default async function handler(req, res) {
       
       let instruction = "";
       if (category === "tops") {
+        // 修正：長袖Tシャツの張り付きとサイズ感の解消
+        const fitInstruction = "The shirt MUST be correctly scaled to perfectly fit the 110cm child's body. The hem should end at the waist, and the sleeves at the wrist, without appearing oversized or too long. The fabric must drape naturally, creating natural folds, drapes, and 3D shadows on the child's body, avoiding a flat, pasted-on appearance. Integrate realistic fabric physics.";
+        
         if (pose === 'energetic_jump') {
-          instruction = "The shirt MUST be worn loose and UNTUCKED. The hem should be slightly LIFTING UP and flowing naturally as if caught in the motion of a jump.";
+          instruction = `The shirt MUST be correctly scaled and worn loose. The hem should end at the waist, and the sleeves at the wrist. Both should be slightly LIFTING UP and flowing naturally as if caught in the motion of a jump. Fabric physics and drapes must be realistic. ${fitInstruction}`;
         } else {
-          instruction = "The shirt MUST be worn loose and UNTUCKED, hanging over the waistband naturally with soft folds and drapes.";
+          instruction = `The shirt MUST be correctly scaled and worn loose. The hem should end at the waist, and the sleeves at the wrist, without being tucked in. Fabric physics must create natural 3D folds and shadows. ${fitInstruction}`;
         }
       } else if (category === "bottoms") {
-        instruction = "The pants should have natural fabric folds. Ensure the front of the pants aligns correctly with the front-facing knees. No reversed legs.";
+        instruction = "The pants should have natural fabric folds. Ensure the front of the pants aligns correctly with the front-facing knees. Scale correctly to the child's legs.";
       } else {
         instruction = "Realistic hat placement on the head, scaled correctly.";
       }
@@ -73,7 +77,7 @@ export default async function handler(req, res) {
           category: category,
           guidance_scale: 3.5,
           timesteps: 50,
-          long_description: instruction
+          long_description: instruction // 修正した指示を使用
         })
       });
       const fashnData = await fashnRes.json();
