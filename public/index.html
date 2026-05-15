@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>F.O.KIDS Style Maker v16</title>
+  <title>男児着画メーカー（プロトタイプ版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style type="text/tailwindcss">
     body { font-family: 'Inter', -apple-system, sans-serif; }
@@ -21,10 +21,8 @@
   <div class="max-w-6xl mx-auto px-6">
     <header class="py-12 flex justify-between items-end">
       <div>
-        <h1 class="text-4xl font-black text-slate-900 tracking-tighter italic">F.O.KIDS <span class="text-indigo-600">Style v16</span></h1>
-        <p class="text-slate-500 font-bold text-[10px] mt-1 uppercase tracking-widest">Physics & Shadow Optimized</p>
+        <h1 class="text-4xl font-black text-slate-900 tracking-tighter">&#x1f466; 男児着画メーカー（プロトタイプ版） </h1>
       </div>
-      <p class="text-slate-800 font-black text-xl tracking-tighter">110cm / AGE 5</p>
     </header>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -39,26 +37,26 @@
 
         <section class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-6">
           <div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1">Pose (目線制御)</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1">ポーズ選択</p>
             <div class="grid grid-cols-2 gap-3">
               <label><input type="radio" name="pose" value="natural_lean" class="hidden" checked><div class="select-card text-center text-xs font-bold">自然な立ち姿</div></label>
               <label><input type="radio" name="pose" value="walking_snapshot" class="hidden"><div class="select-card text-center text-xs font-bold">歩き出し</div></label>
               <label><input type="radio" name="pose" value="energetic_jump" class="hidden"><div class="select-card text-center text-xs font-bold">ジャンプ</div></label>
-              <label><input type="radio" name="pose" value="looking_away" class="hidden"><div class="select-card text-center text-xs font-bold text-indigo-600">★ 完全目線外し</div></label>
+              <label><input type="radio" name="pose" value="looking_away" class="hidden"><div class="select-card text-center text-xs font-bold text-indigo-600">目線外し</div></label>
             </div>
           </div>
           <div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1">Expression</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1">表情</p>
             <div class="grid grid-cols-3 gap-2">
-              <label><input type="radio" name="expression" value="beaming_smile" class="hidden" checked><div class="select-card text-center py-2 text-[10px] font-bold">はじける笑顔</div></label>
-              <label><input type="radio" name="expression" value="mischievous" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">やんちゃ顔</div></label>
               <label><input type="radio" name="expression" value="calm_relaxed" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">リラックス</div></label>
+              <label><input type="radio" name="expression" value="mischievous" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">やんちゃ顔</div></label>
+              <label><input type="radio" name="expression" value="beaming_smile" class="hidden" checked><div class="select-card text-center py-2 text-[10px] font-bold">はじける笑顔</div></label>
             </div>
           </div>
         </section>
 
         <button id="generateBtn" class="w-full bg-slate-900 text-white py-6 rounded-[2rem] font-black text-lg hover:bg-indigo-600 transition-all shadow-2xl active:scale-95 disabled:opacity-50">
-          生成を開始する
+          &#x2728;　モデルと着画を生成する
         </button>
       </div>
 
