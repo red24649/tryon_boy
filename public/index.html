@@ -64,7 +64,7 @@
               <label><input type="radio" name="pose" value="natural_lean" class="hidden" checked><div class="select-card text-center text-xs font-bold">自然な立ち姿</div></label>
               <label><input type="radio" name="pose" value="walking_snapshot" class="hidden"><div class="select-card text-center text-xs font-bold">歩き出し</div></label>
               <label><input type="radio" name="pose" value="energetic_jump" class="hidden"><div class="select-card text-center text-xs font-bold">ジャンプ</div></label>
-              <label><input type="radio" name="pose" value="looking_away" class="hidden"><div class="select-card text-center text-xs font-bold">目線外し</div></label>
+              <label><input type="radio" name="pose" value="looking_away" class="hidden"><div class="select-card text-center text-xs font-bold text-blue-600">目線外し</div></label>
             </div>
           </div>
           <div>
@@ -137,7 +137,6 @@
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // 修正：pose情報をバックエンドに渡す
         body: JSON.stringify({ action: 'start', modelImage: currentModel, productPreview: task.image, category: task.category, pose: selectedPose })
       });
       const { jobId } = await res.json();
@@ -174,17 +173,34 @@
         if (tasks.length === 0) {
             resultImg.src = modelImage; resultImg.classList.remove('hidden'); loading.classList.add('hidden'); generateBtn.disabled = false;
         } else {
-            // 修正：pose情報を引き継ぐ
             processSequentially(modelImage, tasks, tasks.length, pose);
         }
       } catch (e) { alert("エラー"); generateBtn.disabled = false; loading.classList.add('hidden'); }
     };
     
-    document.getElementById('downloadBtn').onclick = () => {
-      const a = document.createElement('a');
-      a.href = document.getElementById('resultImg').src;
-      a.download = `fokids-v18-${Date.now()}.jpg`;
-      a.click();
+    // 修正: 画像表示を防ぎ、強制的にダウンロード（保存完了）させる処理
+    document.getElementById('downloadBtn').onclick = async () => {
+      try {
+        const imageSrc = document.getElementById('resultImg').src;
+        // fetchを使って画像をBlobとして取得
+        const response = await fetch(imageSrc);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        // ファイル名：tryon_boy_ミリ秒.jpg
+        a.download = `tryon_boy_${Date.now()}.jpg`;
+        
+        document.body.appendChild(a);
+        a.click();
+        
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } catch (err) {
+        console.error("画像の保存に失敗しました", err);
+      }
     };
   </script>
 </body>
