@@ -1,4 +1,4 @@
-// api/generate.js (v9 - 高精度調整版)
+// Vercel Serverless Function: api/generate.js (v10 - Professional Edition)
 export const maxDuration = 60;
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
@@ -8,16 +8,39 @@ export default async function handler(req, res) {
   const { action } = req.body;
 
   try {
+    // 1. Imagen 4.0 でベースモデルを生成（自然体なポーズと表情を指定）
     if (action === 'create_model') {
-      const { gender, race, hasHat, hasTop, hasBottom } = req.body;
-      const raceMap = { 'Japanese': 'fully Japanese', 'Caucasian': 'fully Caucasian', 'half-Caucasian, half-Japanese': 'Eurasian mixed-race' };
+      const { pose, expression, hasHat, hasTop, hasBottom } = req.body;
       
-      // 合成しやすくするため、土台となる服を極限までタイトに、髪型をボリュームなしに指定
-      let outfit = hasTop ? "ultra-thin skin-tight white sleeveless inner" : "basic white slim t-shirt";
-      outfit += " and " + (hasBottom ? "skin-tight white thin leggings" : "classic blue denim pants");
-      const hat = hasHat ? "shaved head style or very tight hair" : "natural neat hairstyle";
+      // ポーズごとのキーワード設定：自然な「崩し」を意識
+      const poseMap = {
+        'natural_lean': 'leaning naturally on one leg with a relaxed posture, one hand slightly tucked in pocket, candid snapshot style',
+        'walking_snapshot': 'walking towards the camera with a natural mid-stride pace, dynamic motion, arms swinging naturally',
+        'energetic_jump': 'jumping high in the air with pure joy, playful and energetic limbs, high-speed shutter snapshot',
+        'looking_away': 'looking away from the camera at something interesting off-camera, very natural profile and soft stance'
+      };
 
-      const prompt = `A professional high-end catalog studio photo of a ${raceMap[race] || 'Japanese'} ${gender} child, 5 years old, 110cm tall. Standing straight, arms straight down at sides, facing camera. Wearing: ${outfit}. Head: ${hat}. Background: Seamless minimalist light gray. High resolution, sharp outlines, professional lighting. F.O.KIDS style.`;
+      // 表情ごとのキーワード設定：硬さを取り除く
+      const expMap = {
+        'beaming_smile': 'big infectious beaming smile, eyes crinkling with genuine joy, mouth open laughing, very real expression',
+        'mischievous': 'mischievous playful grin, sparkling eyes full of personality, slightly cheeky but cute expression',
+        'calm_relaxed': 'soft relaxed neutral expression, natural mouth slightly parted, peaceful and authentic child look'
+      };
+
+      const posePrompt = poseMap[pose] || poseMap['natural_lean'];
+      const expPrompt = expMap[expression] || expMap['beaming_smile'];
+
+      // ベースモデルの服装は合成を邪魔しないよう極限まで薄くタイトに
+      let outfit = hasTop ? "an ultra-thin skin-tight white sleeveless undershirt" : "a basic slim-fit white cotton t-shirt";
+      outfit += " and " + (hasBottom ? "ultra-thin white compression leggings" : "standard blue denim shorts");
+      const head = hasHat ? "neatly flat-styled hair to fit under a hat" : "natural soft textured hair with minor messy strands for realism";
+
+      const prompt = `A professional CANDID high-end fashion catalog studio photo of a 5-year-old Japanese boy, 110cm tall. 
+        POSE: ${posePrompt}. 
+        EXPRESSION: ${expPrompt}. 
+        DETAILS: High-end commercial lighting with natural soft shadows, sharp focus on eyes, 8k resolution, authentic skin texture. 
+        WEARING: ${outfit}. Head: ${head}. 
+        BACKGROUND: Seamless minimalist light gray studio background. F.O.KIDS brand atmosphere.`;
 
       const imagenRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${geminiKey}`, {
         method: 'POST',
@@ -28,8 +51,17 @@ export default async function handler(req, res) {
       return res.status(200).json({ modelImage: `data:image/jpeg;base64,${imagenData.predictions[0].bytesBase64Encoded}` });
     }
 
+    // 2. Fashn.ai (tryon-max) で1アイテムずつ合成
     if (action === 'start') {
       const { modelImage, productPreview, category } = req.body;
+      
+      // 合成時の馴染ませ指示
+      const contextPrompt = category === "accessories" 
+        ? "Ensure the hat/cap fits the 3D contour of the head naturally with appropriate shadows."
+        : category === "tops"
+        ? "Drape the garment naturally over the shoulders and chest, ensuring logos follow the fabric folds."
+        : "Ensure the pants fit the legs and waist naturally, creating realistic creases at the knees.";
+
       const fashnRes = await fetch('https://api.fashn.ai/v1/run', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${fashnKey}`, 'Content-Type': 'application/json' },
@@ -37,10 +69,9 @@ export default async function handler(req, res) {
           model_name: "tryon-max",
           inputs: { "model_image": modelImage, "product_image": productPreview },
           category: category,
-          // パラメータを強化して馴染ませる
           guidance_scale: 3.5,
           timesteps: 50,
-          long_description: category === "accessories" ? "Ensure the hat fits naturally on the head contour." : "Ensure the garment fits the 110cm child model body naturally."
+          long_description: contextPrompt
         })
       });
       const fashnData = await fashnRes.json();
@@ -54,5 +85,7 @@ export default async function handler(req, res) {
       });
       return res.status(200).json(await resStatus.json());
     }
-  } catch (error) { res.status(500).json({ error: error.message }); }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 }
