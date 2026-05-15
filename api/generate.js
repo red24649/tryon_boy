@@ -1,4 +1,4 @@
-// api/generate.js (v12 - High-Precision Synthesis)
+// api/generate.js (v13 - Natural Style & Un-tucked Hem Optimization)
 export const maxDuration = 60;
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
@@ -12,29 +12,31 @@ export default async function handler(req, res) {
       const { pose, expression, hasHat, hasTop, hasBottom } = req.body;
       
       const poseMap = {
-        'natural_lean': 'leaning naturally on one leg, casual relaxed posture, arms at sides, facing front',
-        'walking_snapshot': 'natural mid-stride walking towards the camera, captured as a candid snapshot, facing front',
-        'energetic_jump': 'dynamic mid-air jump with pure excitement, facing camera, limbs extended',
-        'looking_away': 'standing naturally but looking away from camera, spontaneous posture, facing camera direction'
+        'natural_lean': 'leaning naturally on one leg, body slightly angled away, relaxed casual pose',
+        'walking_snapshot': 'natural walking motion, captured candidly, looking away from camera',
+        'energetic_jump': 'dynamic jump, playful, spontaneous moment',
+        'looking_away': 'looking away from the camera, head turned to the side, profile or three-quarter view, strictly NO eye contact, candid snapshot'
       };
 
       const expMap = {
-        'beaming_smile': 'big infectious beaming smile, eyes crinkling with joy, laughing, authentic child look',
-        'mischievous': 'mischievous playful grin, sparkling eyes, energetic personality',
-        'calm_relaxed': 'soft relaxed expression, natural mouth, peaceful and authentic look'
+        'beaming_smile': 'beaming candid smile, eyes crinkling, mouth open laughing',
+        'mischievous': 'mischievous grin, sparkling eyes',
+        'calm_relaxed': 'soft relaxed expression, natural mouth, peaceful look, staring into the distance'
       };
 
       const posePrompt = poseMap[pose] || poseMap['natural_lean'];
       const expPrompt = expMap[expression] || expMap['beaming_smile'];
 
-      // 合成を邪魔しない極薄インナー
-      let outfit = hasTop ? "ultra-thin skin-tight white sleeveless undershirt" : "basic slim white tee";
-      outfit += " and " + (hasBottom ? "thin skin-tight white compression leggings" : "simple shorts");
+      // 素体プロンプト：ボトムスへの食い込みを防ぐために「薄いタイトなインナー」を指定
+      let outfit = hasTop ? "ultra-thin skin-tight white sleeveless base layer" : "minimalistic slim white tee";
+      outfit += " and " + (hasBottom ? "thin skin-tight white leggings" : "simple shorts");
 
-      const prompt = `A professional CANDID fashion photo of a 5-year-old Japanese boy, 110cm tall. 
-        POSE: ${posePrompt}. EXPRESSION: ${expPrompt}. 
+      const prompt = `A professional CANDID fashion catalog photo of a 5-year-old Japanese boy, 110cm tall. 
+        POSE: ${posePrompt}. 
+        EXPRESSION: ${expPrompt}. 
+        IMPORTANT: The boy is NOT looking at the camera. Authentic child behavior.
         WEARING: ${outfit}. 
-        DETAILS: Facing camera directly, clear frontal orientation, high-end catalog lighting, minimalist light gray studio. F.O.KIDS style.`;
+        STYLE: Soft studio lighting, realistic skin, minimalist light gray background. F.O.KIDS brand mood.`;
 
       const imagenRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${geminiKey}`, {
         method: 'POST',
@@ -48,14 +50,14 @@ export default async function handler(req, res) {
     if (action === 'start') {
       const { modelImage, productPreview, category } = req.body;
       
-      // 合成指示の微調整：特にトップスの裾を自然にする
+      // 着せ込み時の物理整合性を高める指示
       let instruction = "";
       if (category === "tops") {
-        instruction = "The t-shirt should be worn loose over the waistband of the pants, not tucked in, creating natural drapes and shadows at the hem.";
+        instruction = "The shirt MUST be worn loose and UNTUCKED, hanging over the waistband of the pants naturally with soft folds and drapes.";
       } else if (category === "bottoms") {
-        instruction = "The pants should fit the childs legs perfectly with realistic fabric folds at the knees and ankles.";
+        instruction = "The pants should have natural fabric folds at the knees. Ensure the orientation is correct (facing front/side as the model).";
       } else {
-        instruction = "The hat should follow the 3D contour of the head naturally.";
+        instruction = "Realistic hat placement on the head.";
       }
 
       const fashnRes = await fetch('https://api.fashn.ai/v1/run', {
