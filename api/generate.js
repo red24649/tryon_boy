@@ -1,4 +1,4 @@
-// api/generate.js (v14 - Anatomy & Proportion Fix)
+// api/generate.js (v15 - Anatomy & Default Footwear)
 export const maxDuration = 60;
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
@@ -11,12 +11,10 @@ export default async function handler(req, res) {
     if (action === 'create_model') {
       const { pose, expression, hasHat, hasTop, hasBottom } = req.body;
       
-      // 関節のねじれを防ぐため、体と足の向き（facing forward）を徹底して固定
       const poseMap = {
         'natural_lean': 'leaning naturally on one leg, body and feet facing forward, knees facing front, relaxed posture',
         'walking_snapshot': 'natural walking motion, body facing forward, natural step, knees bending correctly forward',
         'energetic_jump': 'dynamic jump, body facing camera, correct joint alignment',
-        // 目線外し時の体のねじれバグを防止
         'looking_away': 'standing with body and legs facing forward, knees clearly facing front, ONLY the head is turned to the side looking away, strictly NO eye contact'
       };
 
@@ -32,12 +30,13 @@ export default async function handler(req, res) {
       let outfit = hasTop ? "ultra-thin skin-tight white sleeveless base layer" : "minimalistic slim white tee";
       outfit += " and " + (hasBottom ? "thin skin-tight white leggings" : "simple shorts");
 
-      // 頭の肥大化と関節異常を防ぐ強力な制約（ANATOMY）を追加
+      // 新規追加：FOOTWEARプロンプトで黒のスリッポンを明示的に履かせる
       const prompt = `A professional CANDID fashion catalog photo of a 5-year-old Japanese boy, 110cm tall. 
         ANATOMY: Perfect anatomical proportions, correct head-to-body ratio for a 5-year-old (no oversized head), knees and feet must face the correct natural direction.
         POSE: ${posePrompt}. 
         EXPRESSION: ${expPrompt}. 
         WEARING: ${outfit}. 
+        FOOTWEAR: Wearing classic black canvas slip-on sneakers with thick white soles.
         STYLE: Soft studio lighting, realistic skin, minimalist light gray background. F.O.KIDS brand mood.`;
 
       const imagenRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${geminiKey}`, {
@@ -52,12 +51,10 @@ export default async function handler(req, res) {
     if (action === 'start') {
       const { modelImage, productPreview, category } = req.body;
       
-      // 合成時にも物理的におかしくならないよう指示
       let instruction = "";
       if (category === "tops") {
         instruction = "The shirt MUST be worn loose and UNTUCKED, hanging over the waistband naturally.";
       } else if (category === "bottoms") {
-        // パンツの前後逆転を防ぐ
         instruction = "The pants should have natural fabric folds. IMPORTANT: Ensure the front of the pants aligns correctly with the front-facing knees. No reversed legs.";
       } else {
         instruction = "Realistic hat placement on the head, scaled correctly.";
