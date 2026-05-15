@@ -1,4 +1,4 @@
-// api/generate.js
+// api/generate.js (v19 - Drape & Shadow Enhancement)
 export const maxDuration = 60;
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
@@ -36,7 +36,7 @@ export default async function handler(req, res) {
         EXPRESSION: ${expPrompt}. 
         WEARING: ${outfit}. 
         FOOTWEAR: Wearing classic black canvas slip-on sneakers with thick white soles. (Strictly NO white rubber toe caps, purely black canvas top).
-        STYLE: Soft studio lighting, realistic skin textures, minimalist light gray background. F.O.KIDS brand mood.`;
+        STYLE: Soft studio lighting with strong directional shadows to emphasize form and fabric texture, minimalist light gray background. F.O.KIDS brand mood.`;
 
       const imagenRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${geminiKey}`, {
         method: 'POST',
@@ -52,7 +52,8 @@ export default async function handler(req, res) {
       
       let instruction = "";
       if (category === "tops") {
-        const fitInstruction = "The shirt MUST be correctly scaled to perfectly fit the 110cm child's body. The fabric must drape naturally, creating natural folds, drapes, and 3D shadows on the child's body. Ensure the hem is worn loose and absolutely UNTUCKED.";
+        // 修正: シワ(wrinkles)と立体的な陰影(3D lighting)を強調。張り付き感(flat appearance)を否定
+        const fitInstruction = "The shirt MUST be correctly scaled to perfectly fit the 110cm child's body. The fabric must drape naturally, creating highly realistic WRINKLES, folds, and deep 3D shadows across the chest and torso. Avoid a flat, pasted-on appearance. The lighting on the shirt must match the studio lighting on the child. Ensure the hem is worn loose and absolutely UNTUCKED.";
         
         if (pose === 'energetic_jump') {
           instruction = `The hem should end at the waist, and the sleeves at the wrist. Both should be slightly LIFTING UP and flowing naturally as if caught in the motion of a jump. ${fitInstruction}`;
@@ -60,7 +61,7 @@ export default async function handler(req, res) {
           instruction = `The hem should end at the waist, and the sleeves at the wrist. ${fitInstruction}`;
         }
       } else if (category === "bottoms") {
-        instruction = "The pants should have natural fabric folds. Ensure the front of the pants aligns correctly with the front-facing knees. Scale correctly to the child's legs.";
+        instruction = "The pants should have highly realistic natural fabric folds and wrinkles. Ensure the front of the pants aligns correctly with the front-facing knees. Scale correctly to the child's legs.";
       } else {
         instruction = "Realistic hat placement on the head, scaled correctly.";
       }
@@ -72,7 +73,8 @@ export default async function handler(req, res) {
           model_name: "tryon-max",
           inputs: { "model_image": modelImage, "product_image": productPreview },
           category: category,
-          guidance_scale: 3.5,
+          // 修正: 張り付き感を減らし、立体感の生成を優先するためにガイダンススケールを下げる(3.5 -> 2.8)
+          guidance_scale: 2.8,
           timesteps: 50,
           long_description: instruction
         })
