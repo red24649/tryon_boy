@@ -1,0 +1,8 @@
+{
+  "name": "boy-kisekae-app",
+  "version": "1.0.0",
+  "description": "Boy Kisekae Maker",
+  "scripts": {
+    "start": "node"
+  }
+}

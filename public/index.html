@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>男児着画生成メーカー | F.O.KIDS Style</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style type="text/tailwindcss">
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .drop-zone {
+      @apply border-2 border-dashed border-gray-300 rounded-2xl p-4 text-center hover:bg-indigo-50 hover:border-indigo-400 transition cursor-pointer bg-white relative overflow-hidden min-h-[140px] flex flex-col items-center justify-center;
+    }
+    .drop-zone.active { @apply border-indigo-500 bg-indigo-50; }
+    .radio-group label {
+      @apply border-2 border-gray-200 rounded-xl px-4 py-3 text-center cursor-pointer transition text-sm font-medium text-gray-700 bg-white hover:bg-gray-50;
+    }
+    .radio-group input[type="radio"]:checked + label {
+      @apply border-indigo-500 bg-indigo-50 text-indigo-700 font-bold;
+    }
+    .preview-img { @apply absolute inset-0 w-full h-full object-contain p-2 bg-white; }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen p-4 sm:p-8">
+  <div class="max-w-5xl mx-auto">
+    <header class="text-center mb-10">
+      <h1 class="text-4xl font-black text-slate-800 tracking-tighter">男児着画生成メーカー</h1>
+      <p class="text-slate-500 mt-2">4-6歳 (110cm) F.O.KIDS スタイル着画生成システム</p>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <!-- 左側：設定パネル -->
+      <div class="lg:col-span-5 space-y-6">
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+          <h2 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
+            <span class="bg-indigo-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs mr-2 font-mono">1</span>
+            アイテム選択
+          </h2>
+          
+          <div class="grid grid-cols-1 gap-4">
+            <!-- 帽子 -->
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-1 ml-1">🧢 帽子 (任意：未選択なら無し)</label>
+              <div id="dropZoneHat" class="drop-zone">
+                <p class="text-xs text-slate-400">画像を選択またはドラッグ</p>
+                <input type="file" id="hatInput" class="hidden" accept="image/*">
+                <img id="previewHat" class="preview-img hidden">
+              </div>
+            </div>
+
+            <!-- トップス -->
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-1 ml-1">👕 トップス (任意：未選択なら白T)</label>
+              <div id="dropZoneTop" class="drop-zone">
+                <p class="text-xs text-slate-400">画像を選択またはドラッグ</p>
+                <input type="file" id="topInput" class="hidden" accept="image/*">
+                <img id="previewTop" class="preview-img hidden">
+              </div>
+            </div>
+
+            <!-- ボトムス -->
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-1 ml-1">👖 ボトムス (任意：未選択ならデニム)</label>
+              <div id="dropZoneBottom" class="drop-zone">
+                <p class="text-xs text-slate-400">画像を選択またはドラッグ</p>
+                <input type="file" id="bottomInput" class="hidden" accept="image/*">
+                <img id="previewBottom" class="preview-img hidden">
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-8 space-y-6 border-t border-slate-100 pt-6">
+            <div>
+              <span class="block text-xs font-bold text-slate-500 mb-3 ml-1">モデルタイプ</span>
+              <div class="radio-group grid grid-cols-3 gap-2">
+                <input type="radio" name="race" id="race1" value="Japanese" checked class="hidden">
+                <label for="race1">日本人</label>
+                <input type="radio" name="race" id="race2" value="half-Caucasian, half-Japanese" class="hidden">
+                <label for="race2">ハーフ</label>
+                <input type="radio" name="race" id="race3" value="Caucasian" class="hidden">
+                <label for="race3">欧米系</label>
+              </div>
+            </div>
+            
+            <button id="generateBtn" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-lg hover:bg-indigo-600 transition-all shadow-lg">
+              着画を生成する
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右側：結果表示 -->
+      <div class="lg:col-span-7 flex flex-col h-full">
+        <div id="resultCard" class="bg-white p-2 rounded-3xl shadow-sm border border-slate-200 flex-grow flex items-center justify-center min-h-[500px] relative">
+          <div id="placeholder" class="text-center p-8">
+            <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
+              <svg class="w-10 h-10 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            </div>
+            <p class="text-slate-400 font-medium">生成された着画がここに表示されます</p>
+            <p class="text-slate-300 text-xs mt-1">4-6歳 (110cm) のモデルをAIが生成します</p>
+          </div>
+
+          <div id="loading" class="hidden text-center">
+            <div class="inline-block animate-spin rounded-full h-14 w-14 border-4 border-indigo-500 border-t-transparent mb-6"></div>
+            <p id="statusLabel" class="font-bold text-slate-800 text-lg">AIモデルを構成中...</p>
+            <p class="text-slate-400 text-sm mt-2">F.O.KIDSスタイルのモデルを生成しています</p>
+          </div>
+
+          <img id="resultImg" class="hidden w-full h-auto rounded-2xl">
+          
+          <button id="downloadBtn" class="hidden absolute bottom-6 right-6 bg-white shadow-xl p-4 rounded-full border border-slate-100 text-slate-700 hover:scale-110 transition-transform">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+          </button>
+        </div>
+        
+        <div class="mt-4 p-5 bg-amber-50 border border-amber-100 rounded-2xl">
+          <h3 class="text-amber-800 font-bold text-sm mb-1">💡 システム補足</h3>
+          <ul class="text-amber-700 text-xs space-y-1 list-disc ml-4">
+            <li>トップス未選択時：ベーシックな白Tシャツを着用します。</li>
+            <li>ボトムス未選択時：ウォッシュ加工のデニムパンツを着用します。</li>
+            <li>Imagen 4.0がカタログ品質の110cmモデルを立ち姿で生成します。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const state = { hat: null, top: null, bottom: null };
+
+    function setupUpload(inputId, dropId, previewId, key) {
+      const input = document.getElementById(inputId);
+      const drop = document.getElementById(dropId);
+      const preview = document.getElementById(previewId);
+
+      drop.onclick = () => input.click();
+      drop.ondragover = (e) => { e.preventDefault(); drop.classList.add('active'); };
+      drop.ondragleave = () => drop.classList.remove('active');
+      drop.ondrop = (e) => {
+        e.preventDefault();
+        drop.classList.remove('active');
+        handleFile(e.dataTransfer.files[0], preview, key, drop);
+      };
+
+      input.onchange = (e) => handleFile(e.target.files[0], preview, key, drop);
+    }
+
+    function handleFile(file, preview, key, drop) {
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          state[key] = e.target.result;
+          preview.src = e.target.result;
+          preview.classList.remove('hidden');
+          drop.classList.add('border-indigo-300');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    setupUpload('hatInput', 'dropZoneHat', 'previewHat', 'hat');
+    setupUpload('topInput', 'dropZoneTop', 'previewTop', 'top');
+    setupUpload('bottomInput', 'dropZoneBottom', 'previewBottom', 'bottom');
+
+    const generateBtn = document.getElementById('generateBtn');
+    const loading = document.getElementById('loading');
+    const placeholder = document.getElementById('placeholder');
+    const resultImg = document.getElementById('resultImg');
+    const statusLabel = document.getElementById('statusLabel');
+
+    generateBtn.onclick = async () => {
+      const race = document.querySelector('input[name="race"]:checked').value;
+
+      placeholder.classList.add('hidden');
+      resultImg.classList.add('hidden');
+      loading.classList.remove('hidden');
+      generateBtn.disabled = true;
+      generateBtn.innerText = "生成中...";
+
+      try {
+        statusLabel.innerText = "AIモデル画像を生成中...";
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'start',
+            hatImage: state.hat,
+            topImage: state.top,
+            bottomImage: state.bottom,
+            gender: 'boy', // 固定または選択肢追加
+            race: race
+          })
+        });
+
+        if (!res.ok) throw new Error("サーバーエラーが発生しました");
+        const { jobId } = await res.json();
+        
+        let attempts = 0;
+        const checkStatus = setInterval(async () => {
+          attempts++;
+          const sRes = await fetch('/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'status', jobId })
+          });
+          const sData = await sRes.json();
+
+          if (sData.status === 'completed') {
+            clearInterval(checkStatus);
+            resultImg.src = sData.output[0];
+            resultImg.classList.remove('hidden');
+            loading.classList.add('hidden');
+            generateBtn.disabled = false;
+            generateBtn.innerText = "着画を生成する";
+            document.getElementById('downloadBtn').classList.remove('hidden');
+          } else if (sData.status === 'failed' || attempts > 40) {
+            clearInterval(checkStatus);
+            alert('生成に失敗しました。時間をおいて再度お試しください。');
+            loading.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            generateBtn.disabled = false;
+            generateBtn.innerText = "着画を生成する";
+          } else {
+            statusLabel.innerText = "試着アイテムを合成中...";
+          }
+        }, 3000);
+
+      } catch (e) {
+        alert(e.message);
+        loading.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        generateBtn.disabled = false;
+        generateBtn.innerText = "着画を生成する";
+      }
+    };
+  </script>
+</body>
+</html>
