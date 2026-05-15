@@ -64,7 +64,7 @@
               <label><input type="radio" name="pose" value="natural_lean" class="hidden" checked><div class="select-card text-center text-xs font-bold">自然な立ち姿</div></label>
               <label><input type="radio" name="pose" value="walking_snapshot" class="hidden"><div class="select-card text-center text-xs font-bold">歩き出し</div></label>
               <label><input type="radio" name="pose" value="energetic_jump" class="hidden"><div class="select-card text-center text-xs font-bold">ジャンプ</div></label>
-              <label><input type="radio" name="pose" value="looking_away" class="hidden"><div class="select-card text-center text-xs font-bold">目線外し</div></label>
+              <label><input type="radio" name="pose" value="looking_away" class="hidden"><div class="select-card text-center text-xs font-bold text-blue-600">目線外し</div></label>
             </div>
           </div>
           <div>
@@ -137,6 +137,7 @@
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        // 修正：pose情報をバックエンドに渡す
         body: JSON.stringify({ action: 'start', modelImage: currentModel, productPreview: task.image, category: task.category, pose: selectedPose })
       });
       const { jobId } = await res.json();
@@ -173,6 +174,7 @@
         if (tasks.length === 0) {
             resultImg.src = modelImage; resultImg.classList.remove('hidden'); loading.classList.add('hidden'); generateBtn.disabled = false;
         } else {
+            // 修正：pose情報を引き継ぐ
             processSequentially(modelImage, tasks, tasks.length, pose);
         }
       } catch (e) { alert("エラー"); generateBtn.disabled = false; loading.classList.add('hidden'); }
@@ -181,7 +183,7 @@
     document.getElementById('downloadBtn').onclick = () => {
       const a = document.createElement('a');
       a.href = document.getElementById('resultImg').src;
-      a.download = `fokids-v17-${Date.now()}.jpg`;
+      a.download = `fokids-v18-${Date.now()}.jpg`;
       a.click();
     };
   </script>
