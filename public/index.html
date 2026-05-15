@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>F.O.KIDS Style Maker v15</title>
+  <title>F.O.KIDS Style Maker v16</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style type="text/tailwindcss">
     body { font-family: 'Inter', -apple-system, sans-serif; }
@@ -21,8 +21,8 @@
   <div class="max-w-6xl mx-auto px-6">
     <header class="py-12 flex justify-between items-end">
       <div>
-        <h1 class="text-4xl font-black text-slate-900 tracking-tighter italic">F.O.KIDS <span class="text-indigo-600">Style v15</span></h1>
-        <p class="text-slate-500 font-bold text-[10px] mt-1 uppercase tracking-widest">Footwear: Black Slip-on Shoes</p>
+        <h1 class="text-4xl font-black text-slate-900 tracking-tighter italic">F.O.KIDS <span class="text-indigo-600">Style v16</span></h1>
+        <p class="text-slate-500 font-bold text-[10px] mt-1 uppercase tracking-widest">Physics & Shadow Optimized</p>
       </div>
       <p class="text-slate-800 font-black text-xl tracking-tighter">110cm / AGE 5</p>
     </header>
@@ -101,7 +101,7 @@
 
     const generateBtn = document.getElementById('generateBtn'), statusLabel = document.getElementById('statusLabel'), resultImg = document.getElementById('resultImg'), loading = document.getElementById('loading');
 
-    async function processSequentially(currentModel, tasks, total) {
+    async function processSequentially(currentModel, tasks, total, selectedPose) {
       if (tasks.length === 0) {
         resultImg.src = currentModel; resultImg.classList.remove('hidden'); loading.classList.add('hidden');
         document.getElementById('downloadBtn').classList.remove('hidden'); generateBtn.disabled = false;
@@ -115,7 +115,8 @@
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'start', modelImage: currentModel, productPreview: task.image, category: task.category })
+        // 修正：pose情報をバックエンドに渡す
+        body: JSON.stringify({ action: 'start', modelImage: currentModel, productPreview: task.image, category: task.category, pose: selectedPose })
       });
       const { jobId } = await res.json();
 
@@ -124,7 +125,7 @@
         const sData = await sRes.json();
         if (sData.status === 'completed') {
           clearInterval(timer);
-          processSequentially(sData.output[0], tasks, total);
+          processSequentially(sData.output[0], tasks, total, selectedPose);
         } else if (sData.status === 'failed') { clearInterval(timer); alert("合成失敗"); location.reload(); }
       }, 4000);
     }
@@ -134,7 +135,7 @@
       const expression = document.querySelector('input[name="expression"]:checked').value;
       document.getElementById('placeholder').classList.add('hidden'); resultImg.classList.add('hidden'); loading.classList.remove('hidden'); generateBtn.disabled = true;
       document.querySelectorAll('.step-dot').forEach((d, i) => d.classList.toggle('active', i === 0));
-      statusLabel.innerText = "ベースモデル(骨格)生成中";
+      statusLabel.innerText = "ベースモデル(影・物理補正)生成中";
 
       try {
         const res = await fetch('/api/generate', {
@@ -151,7 +152,8 @@
         if (tasks.length === 0) {
             resultImg.src = modelImage; resultImg.classList.remove('hidden'); loading.classList.add('hidden'); generateBtn.disabled = false;
         } else {
-            processSequentially(modelImage, tasks, tasks.length);
+            // 修正：pose情報を引き継ぐ
+            processSequentially(modelImage, tasks, tasks.length, pose);
         }
       } catch (e) { alert("エラー"); generateBtn.disabled = false; loading.classList.add('hidden'); }
     };
@@ -159,7 +161,7 @@
     document.getElementById('downloadBtn').onclick = () => {
       const a = document.createElement('a');
       a.href = document.getElementById('resultImg').src;
-      a.download = `fokids-v15-${Date.now()}.jpg`;
+      a.download = `fokids-v16-${Date.now()}.jpg`;
       a.click();
     };
   </script>
