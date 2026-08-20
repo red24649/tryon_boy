@@ -83,6 +83,16 @@
               <label><input type="radio" name="expression" value="beaming_smile" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">はじける笑顔</div></label>
             </div>
           </div>
+          <div>
+            <h2 class="text-lg font-bold text-slate-800 mb-4">
+              ④ 人種
+            </h2>
+            <div class="grid grid-cols-3 gap-2">
+              <label><input type="radio" name="race" value="Japanese" class="hidden" checked><div class="select-card text-center py-2 text-[10px] font-bold">アジア系</div></label>
+              <label><input type="radio" name="race" value="half-Caucasian, half-Japanese" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">ハーフ系</div></label>
+              <label><input type="radio" name="race" value="Caucasian" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">欧米系</div></label>
+            </div>
+          </div>
         </section>
 
         <button id="generateBtn" class="w-full bg-blue-600 text-white py-6 rounded-[2rem] font-black text-lg hover:bg-blue-700 transition-all shadow-xl active:scale-95 disabled:opacity-50">
@@ -194,6 +204,7 @@
     generateBtn.onclick = async () => {
       const pose = document.querySelector('input[name="pose"]:checked').value;
       const expression = document.querySelector('input[name="expression"]:checked').value;
+      const race = document.querySelector('input[name="race"]:checked').value;
       document.getElementById('placeholder').classList.add('hidden'); resultImg.classList.add('hidden'); loading.classList.remove('hidden'); generateBtn.disabled = true;
       document.querySelectorAll('.step-dot').forEach((d, i) => d.classList.toggle('active', i === 0));
       statusLabel.innerText = "ベースモデル(影・物理補正)生成中";
@@ -202,7 +213,7 @@
         const res = await fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'create_model', pose, expression, hasHat: !!state.hat, hasTop: !!state.top, hasBottom: !!state.bottom, hasShoe: !!state.shoe })
+          body: JSON.stringify({ action: 'create_model', pose, expression, race, hasHat: !!state.hat, hasTop: !!state.top, hasBottom: !!state.bottom, hasShoe: !!state.shoe })
         });
         const { modelImage } = await res.json();
         const tasks = [];
