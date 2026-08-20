@@ -40,34 +40,52 @@ export default async function handler(req, res) {
       const modelPrompt = `A high-end professional fashion catalog photograph of a ${raceDescription} ${gender} child, 5 years old, height 110cm. The child has an energetic expression and a natural smile. Posture: Standing confidently facing forward, arms relaxed, full body visible. Wearing: ${outfitBase}. Head: ${hatPrompt}. Background: Minimalist clean light gray studio. High resolution, commercial lighting, realistic skin and fabric textures. F.O.KIDS style.`;
 
       // 4. Gemini画像生成モデル (Nano Banana系) リクエスト
-      // Imagen4系(imagen-4.0-generate-001)は2026年8月17日付けでシャットダウン済みのため、
-      // gemini-3.1-flash-image + generateContent エンドポイントに切り替え
-      // Gemini APIにタイムアウト制御を追加（120秒）
-      const abortController = new AbortController();
-      const fetchTimeout = setTimeout(() => abortController.abort(), 120000);
+      // Imagen4系は2026年8月17日付でシャットダウン済み → gemini-2.5-flash (IMAGE対応) に切り替え
+      console.log("Starting Gemini image generation...");
+      const geminiStartTime = Date.now();
 
-      const imagenRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key=${geminiApiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: abortController.signal,
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: modelPrompt }] }],
-          generationConfig: {
-            responseModalities: ["TEXT", "IMAGE"],
-            imageConfig: { aspectRatio: "1:1" },
-            // 思考(thinking)をLOWに設定して画像生成を高速化
-            thinkingConfig: { thinkingBudget: 0 }
-          }
-        })
-      });
+      // タイムアウト制御（90秒）
+      const abortController = new AbortController();
+      const fetchTimeout = setTimeout(() => abortController.abort(), 90000);
+
+      let imagenRes;
+      try {
+        imagenRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: abortController.signal,
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: modelPrompt }] }],
+            generationConfig: {
+              responseModalities: ["IMAGE"],
+              thinkingConfig: { thinkingBudget: 0 }
+            }
+          })
+        });
+      } catch (fetchError) {
+        clearTimeout(fetchTimeout);
+        if (fetchError.name === 'AbortError') {
+          throw new Error(`Gemini API タイムアウト (90秒経過)`);
+        }
+        throw new Error(`Gemini API 通信エラー: ${fetchError.message}`);
+      }
       clearTimeout(fetchTimeout);
+
+      console.log(`Gemini API responded in ${Date.now() - geminiStartTime}ms, status: ${imagenRes.status}`);
+
+      if (!imagenRes.ok) {
+        const errorText = await imagenRes.text();
+        throw new Error(`Gemini APIエラー (${imagenRes.status}): ${errorText}`);
+      }
+
       const imagenData = await imagenRes.json();
       const modelImagePart = imagenData?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
       if (!modelImagePart) {
-        throw new Error("Gemini image generation failed: " + JSON.stringify(imagenData));
+        throw new Error("Gemini画像生成失敗 (画像データなし): " + JSON.stringify(imagenData).substring(0, 500));
       }
       const modelMimeType = modelImagePart.inlineData.mimeType || 'image/png';
       const modelImageBase64 = `data:${modelMimeType};base64,${modelImagePart.inlineData.data}`;
+      console.log(`Gemini image generation completed in ${Date.now() - geminiStartTime}ms`);
 
       // 5. Fashn.ai (tryon-max) でアイテムを合成
       const fashnInputs = { model_image: modelImageBase64 };
