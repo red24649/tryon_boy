@@ -1,5 +1,5 @@
 // Vercel Serverless Function: api/generate.js
-export const maxDuration = 300;
+export const maxDuration = 120;
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
 export default async function handler(req, res) {
@@ -8,123 +8,138 @@ export default async function handler(req, res) {
   const fashnApiKey = process.env.FASHN_API_KEY;
   const geminiApiKey = process.env.GEMINI_API_KEY;
 
+  if (!fashnApiKey || !geminiApiKey) {
+    return res.status(500).json({ error: '必要なAPIキー（FASHN_API_KEY または GEMINI_API_KEY）が設定されていません。' });
+  }
+
   const { action } = req.body;
 
   try {
-    if (action === 'start') {
-      const { hatImage, topImage, bottomImage, gender, race } = req.body;
+    // ============================================================
+    // ステップ1: create_model ? Geminiで子供モデルの画像を生成
+    // ============================================================
+    if (action === 'create_model') {
+      const { pose, expression, hasHat, hasTop, hasBottom } = req.body;
 
-      // 各アイテムの有無
-      const hasHat = !!hatImage;
-      const hasTop = !!topImage;
-      const hasBottom = !!bottomImage;
-
-      // 1. 人種プロンプトの変換
-      const raceMap = {
-        'Japanese': 'fully Japanese',
-        'Caucasian': 'fully Caucasian',
-        'half-Caucasian, half-Japanese': 'Eurasian mixed-race child (Caucasian and Japanese)'
+      // ポーズのマッピング
+      const poseMap = {
+        'natural_lean': 'Standing confidently facing forward, arms relaxed at sides, full body visible, natural relaxed posture',
+        'walking_snapshot': 'Walking forward naturally, one foot slightly ahead, arms swinging gently, candid snapshot feel',
+        'energetic_jump': 'Jumping energetically in the air with arms raised, happy and dynamic pose, full body visible',
+        'looking_away': 'Standing at a slight angle, head turned to the side looking away from camera, cool and stylish pose'
       };
-      const raceDescription = raceMap[race] || race;
+      const poseDescription = poseMap[pose] || poseMap['natural_lean'];
 
-      // 2. モデルの初期状態（ベース）を構築
-      // 画像がないアイテムはプロンプトで「着用済み」として生成させる
+      // 表情のマッピング
+      const expressionMap = {
+        'calm_relaxed': 'calm and relaxed expression',
+        'mischievous': 'mischievous playful grin',
+        'beaming_smile': 'big beaming joyful smile'
+      };
+      const expressionDescription = expressionMap[expression] || expressionMap['calm_relaxed'];
+
+      // 服装ベース（Fashn.aiで後から着せ替えるアイテムは白い下地にする）
       let outfitBase = "";
-      outfitBase += hasTop ? "a thin white inner t-shirt" : "a trendy white short-sleeve t-shirt";
+      outfitBase += hasTop ? "a plain thin white inner t-shirt" : "a trendy white short-sleeve t-shirt";
       outfitBase += " and ";
-      outfitBase += hasBottom ? "white slim leggings" : "classic blue denim pants with a natural washed texture";
+      outfitBase += hasBottom ? "plain white slim leggings" : "classic blue denim pants with a natural washed texture";
+      const hatPrompt = hasHat ? "bareheaded, no hat" : "no hat, neat and cool hairstyle";
+
+      const modelPrompt = `A high-end professional fashion catalog photograph of a Japanese boy child, 5 years old, height 110cm. The child has a ${expressionDescription}. Posture: ${poseDescription}. Wearing: ${outfitBase}. Head: ${hatPrompt}. Barefoot on clean floor. Background: Minimalist clean light gray studio backdrop. High resolution, commercial studio lighting, realistic skin and fabric textures.`;
+
+      console.log("Starting Gemini image generation for create_model...");
+      const startTime = Date.now();
+
+      // Gemini画像生成（gemini-3.1-flash-image ? tryon_babyで動作確認済み）
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key=${geminiApiKey}`;
       
-      const hatPrompt = hasHat ? "bareheaded (as a base for hat overlay)" : "no hat, neat and cool hairstyle";
+      const geminiRes = await fetch(geminiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: modelPrompt }] }],
+          generationConfig: {
+            responseModalities: ["TEXT", "IMAGE"]
+          }
+        })
+      });
 
-      // 3. Imagen 4.0 プロンプト: カタログ品質の110cmキッズを生成
-      const modelPrompt = `A high-end professional fashion catalog photograph of a ${raceDescription} ${gender} child, 5 years old, height 110cm. The child has an energetic expression and a natural smile. Posture: Standing confidently facing forward, arms relaxed, full body visible. Wearing: ${outfitBase}. Head: ${hatPrompt}. Background: Minimalist clean light gray studio. High resolution, commercial lighting, realistic skin and fabric textures. F.O.KIDS style.`;
+      console.log(`Gemini responded in ${Date.now() - startTime}ms, status: ${geminiRes.status}`);
 
-      // 4. Gemini画像生成モデル (Nano Banana系) リクエスト
-      // Imagen4系は2026年8月17日付でシャットダウン済み → gemini-2.5-flash (IMAGE対応) に切り替え
-      console.log("Starting Gemini image generation...");
-      const geminiStartTime = Date.now();
-
-      // タイムアウト制御（90秒）
-      const abortController = new AbortController();
-      const fetchTimeout = setTimeout(() => abortController.abort(), 90000);
-
-      let imagenRes;
-      try {
-        imagenRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          signal: abortController.signal,
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: modelPrompt }] }],
-            generationConfig: {
-              responseModalities: ["IMAGE"],
-              thinkingConfig: { thinkingBudget: 0 }
-            }
-          })
-        });
-      } catch (fetchError) {
-        clearTimeout(fetchTimeout);
-        if (fetchError.name === 'AbortError') {
-          throw new Error(`Gemini API タイムアウト (90秒経過)`);
-        }
-        throw new Error(`Gemini API 通信エラー: ${fetchError.message}`);
-      }
-      clearTimeout(fetchTimeout);
-
-      console.log(`Gemini API responded in ${Date.now() - geminiStartTime}ms, status: ${imagenRes.status}`);
-
-      if (!imagenRes.ok) {
-        const errorText = await imagenRes.text();
-        throw new Error(`Gemini APIエラー (${imagenRes.status}): ${errorText}`);
+      if (!geminiRes.ok) {
+        const errorText = await geminiRes.text();
+        throw new Error(`Gemini APIエラー (${geminiRes.status}): ${errorText.substring(0, 300)}`);
       }
 
-      const imagenData = await imagenRes.json();
-      const modelImagePart = imagenData?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
-      if (!modelImagePart) {
-        throw new Error("Gemini画像生成失敗 (画像データなし): " + JSON.stringify(imagenData).substring(0, 500));
+      const geminiData = await geminiRes.json();
+      const imagePart = geminiData?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+      if (!imagePart) {
+        const reason = geminiData?.candidates?.[0]?.finishReason || 'unknown';
+        throw new Error(`Gemini画像生成失敗 (finishReason: ${reason}): ${JSON.stringify(geminiData).substring(0, 300)}`);
       }
-      const modelMimeType = modelImagePart.inlineData.mimeType || 'image/png';
-      const modelImageBase64 = `data:${modelMimeType};base64,${modelImagePart.inlineData.data}`;
-      console.log(`Gemini image generation completed in ${Date.now() - geminiStartTime}ms`);
 
-      // 5. Fashn.ai (tryon-max) でアイテムを合成
-      const fashnInputs = { model_image: modelImageBase64 };
-      if (hasTop) fashnInputs.top_garment_image = topImage;
-      if (hasBottom) fashnInputs.bottom_garment_image = bottomImage;
-      if (hasHat) fashnInputs.hat_image = hatImage;
-      
-      // tryon-maxモデルは garment_image (必須) にどれか一つを指定
-      fashnInputs.garment_image = topImage || bottomImage || hatImage || modelImageBase64;
+      const mimeType = imagePart.inlineData.mimeType || 'image/png';
+      const modelImage = `data:${mimeType};base64,${imagePart.inlineData.data}`;
+      console.log(`create_model completed in ${Date.now() - startTime}ms`);
+
+      return res.status(200).json({ modelImage });
+    }
+
+    // ============================================================
+    // ステップ2: start ? モデル画像＋服画像をFashn.aiに送信
+    // ============================================================
+    else if (action === 'start') {
+      const { modelImage, productPreview, category } = req.body;
+
+      if (!modelImage || !productPreview) {
+        return res.status(400).json({ error: 'modelImage と productPreview が必要です' });
+      }
+
+      console.log(`Starting Fashn.ai job for category: ${category}`);
 
       const fashnRes = await fetch('https://api.fashn.ai/v1/run', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${fashnApiKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model_name: "tryon-max",
-          inputs: fashnInputs,
-          category: hasTop ? "tops" : (hasBottom ? "bottoms" : "accessories"),
-          guidance_scale: 2.5,
-          timesteps: 50
+          inputs: {
+            model_image: modelImage,
+            product_image: productPreview
+          },
+          category: category || "tops"
         })
       });
 
       const fashnData = await fashnRes.json();
-      if (!fashnRes.ok) throw new Error(fashnData.message || "Fashn.ai error");
+      if (!fashnRes.ok) {
+        throw new Error(`Fashn.ai エラー: ${fashnData.message || JSON.stringify(fashnData).substring(0, 300)}`);
+      }
 
+      console.log(`Fashn.ai job started: ${fashnData.id}`);
       return res.status(200).json({ jobId: fashnData.id });
     }
 
-    if (action === 'status') {
+    // ============================================================
+    // ステップ3: status ? Fashn.aiのジョブ状態を確認
+    // ============================================================
+    else if (action === 'status') {
       const { jobId } = req.body;
-      const resStatus = await fetch(`https://api.fashn.ai/v1/status/${jobId}`, {
+      const statusRes = await fetch(`https://api.fashn.ai/v1/status/${jobId}`, {
         headers: { 'Authorization': `Bearer ${fashnApiKey}` }
       });
-      const data = await resStatus.json();
+      const data = await statusRes.json();
       return res.status(200).json(data);
+    }
+
+    // ============================================================
+    // 未知のアクション → 即座にエラーを返す（ハング防止）
+    // ============================================================
+    else {
+      return res.status(400).json({ error: `不明なアクション: ${action}` });
     }
 
   } catch (error) {
     console.error("API Error:", error);
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 }
