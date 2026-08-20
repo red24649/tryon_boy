@@ -59,7 +59,8 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           contents: [{ parts: [{ text: modelPrompt }] }],
           generationConfig: {
-            responseModalities: ["TEXT", "IMAGE"]
+            responseModalities: ["TEXT", "IMAGE"],
+            imageConfig: { aspectRatio: "1:1" }
           }
         })
       });
@@ -106,7 +107,9 @@ export default async function handler(req, res) {
             model_image: modelImage,
             product_image: productPreview
           },
-          category: category || "tops"
+          category: category || "tops",
+          guidance_scale: 2.5,
+          timesteps: 50
         })
       });
 
