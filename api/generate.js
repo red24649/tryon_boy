@@ -1,96 +1,196 @@
-// api/generate.js (v21 - Hat Scale & Placement Fix)
+// Vercelのタイムアウト時間を最大60秒に延長
 export const maxDuration = 60;
-export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
+
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '4.5mb',
+    },
+  },
+};
 
 export default async function handler(req, res) {
-  const fashnKey = process.env.FASHN_API_KEY;
-  const geminiKey = process.env.GEMINI_API_KEY;
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  const fashnApiKey = process.env.FASHN_API_KEY;
+  const geminiApiKey = process.env.GEMINI_API_KEY;
+
+  if (!fashnApiKey || !geminiApiKey) {
+    return res.status(500).json({ error: '必要なAPIキー（FASHN_API_KEY または GEMINI_API_KEY）が設定されていません。' });
+  }
+
   const { action } = req.body;
 
   try {
-    if (action === 'create_model') {
-      const { pose, expression, hasHat, hasTop, hasBottom } = req.body;
-      
-      const poseMap = {
-        'natural_lean': 'leaning naturally on one leg, body and feet facing forward, knees facing front, relaxed posture, natural relaxed fingers with distinct nails, subtle off-camera gaze (not staring directly at the lens)',
-        'walking_snapshot': 'natural walking motion, body facing forward, natural step, knees bending correctly forward, natural hand movement, subtle off-camera gaze (not staring directly at the lens)',
-        'energetic_jump': 'dynamic mid-air jump with pure excitement, body facing camera, correct joint alignment, natural relaxed fingers, subtle off-camera gaze (not staring directly at the lens). IMPORTANT: Add a realistic soft drop shadow on the floor directly below the boy to indicate height in the air.',
-        'looking_away': 'standing with body and legs facing forward, knees clearly facing front, ONLY the head is turned to the side looking away, strictly NO eye contact, head turned profile view'
-      };
-
-      const expMap = {
-        'beaming_smile': 'beaming candid smile, eyes crinkling, mouth open laughing, very genuine',
-        'mischievous': 'mischievous playful grin, sparkling eyes, energetic personality',
-        'calm_relaxed': 'soft relaxed neutral expression, natural mouth, peaceful look, staring slightly into the distance'
-      };
-
-      const posePrompt = poseMap[pose] || poseMap['natural_lean'];
-      const expPrompt = expMap[expression] || expMap['beaming_smile'];
-
-      let outfit = hasTop ? "ultra-thin skin-tight white sleeveless base layer" : "minimalistic slim white tee";
-      outfit += " and " + (hasBottom ? "thin skin-tight white leggings" : "simple shorts");
-
-      // 修正：帽子のスケール感を意識させるImagenプロンプト
-      const prompt = `A professional CANDID fashion catalog photo of a 5-year-old Japanese boy, 110cm tall. 
-        ANATOMY: Perfect anatomical proportions, correct head-to-body ratio for a 5-year-old (no oversized head), knees and feet must face the correct natural direction, natural relaxed fingers with distinct nails. ensure accessories like hats are scaled to the same 110cm body proportions.
-        POSE: ${posePrompt}. 
-        EXPRESSION: ${expPrompt}. 
-        WEARING: ${outfit}. 
-        FOOTWEAR: Wearing classic black canvas slip-on sneakers with thick white soles. (Strictly NO white rubber toe caps, purely black canvas top).
-        STYLE: Soft studio lighting with strong directional shadows to emphasize form and fabric texture, minimalist light gray background. F.O.KIDS brand mood.`;
-
-      const imagenRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${geminiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ instances: [{ prompt: prompt }], parameters: { sampleCount: 1, aspectRatio: "1:1" } })
-      });
-      const imagenData = await imagenRes.json();
-      return res.status(200).json({ modelImage: `data:image/jpeg;base64,${imagenData.predictions[0].bytesBase64Encoded}` });
-    }
-
     if (action === 'start') {
-      const { modelImage, productPreview, category, pose } = req.body;
-      
-      let instruction = "";
-      if (category === "tops") {
-        const fitInstruction = "The shirt MUST be correctly scaled to perfectly fit the 110cm child's body. The fabric must drape naturally, creating highly realistic WRINKLES, folds, and deep 3D shadows across the chest and torso. Avoid a flat, pasted-on appearance. The lighting on the shirt must match the studio lighting on the child. Ensure the hem is worn loose and absolutely UNTUCKED.";
-        
-        if (pose === 'energetic_jump') {
-          instruction = `The hem should end at the waist, and the sleeves at the wrist. Both should be slightly LIFTING UP and flowing naturally as if caught in the motion of a jump. ${fitInstruction}`;
-        } else {
-          instruction = `The hem should end at the waist, and the sleeves at the wrist. ${fitInstruction}`;
-        }
-      } else if (category === "bottoms") {
-        instruction = "The pants should have highly realistic natural fabric folds and wrinkles. Ensure the front of the pants aligns correctly with the front-facing knees. Scale correctly to the child's legs.";
-      } else if (category === "accessories") {
-        // 修正：帽子のスケールと配置を強制するFashn.aiプロンプト
-        instruction = "Scale and place the hat naturally on the child's head, ensuring it doesn't appear too large, too small, or incorrectly angled. It should sit snug on the head. match the studio lighting.";
-      } else {
-        instruction = "Realistic placement and scaling, matching the 110cm child's body. match the studio lighting.";
+      const { garmentImageBase64, gender, race, sleeveLength, pantsLength, itemType, pose } = req.body;
+
+      let raceDescription = race;
+      if (race === 'half-Caucasian, half-Japanese') {
+        raceDescription = "Eurasian mixed-race (Caucasian-Japanese blend), leaning slightly more towards Caucasian facial features with soft brown hair";
+      } else if (race === 'Japanese') {
+        raceDescription = "fully Japanese";
+      } else if (race === 'Caucasian') {
+        raceDescription = "fully Caucasian";
       }
 
-      const fashnRes = await fetch('https://api.fashn.ai/v1/run', {
+      let outfitDescription = "";
+      let armsDescription = "bare forearms clearly visible";
+      let legsDescription = "bare legs clearly visible";
+      let chestDescription = "";
+      let postureDescription = "sitting happily on the floor, perfectly facing forward, upright posture";
+      let lightingDescription = "soft and natural lighting";
+
+      // 改善：つかまり立ちのカメラアングルを水平（アイレベル）に指定
+      if (pose === 'sitting_side') {
+        postureDescription = "sitting happily on the floor, in a relaxed and natural posture, with the body angled slightly diagonally to the camera (3/4 profile view)";
+      } else if (pose === 'standing') {
+        postureDescription = "standing up, holding onto a small soft white baby sofa or padded prop for support, looking at the camera. Shot at the baby's eye level, horizontal camera angle, perfectly straight-on view, strictly NOT looking down from above";
+      }
+
+      if (itemType === 'bib') {
+        outfitDescription = "a simple, perfectly plain white short-sleeve bodysuit";
+        chestDescription = "a perfectly smooth, flat white fabric over the chest without any wrinkles";
+        postureDescription = "sitting happily on the floor, perfectly facing forward, upright posture";
+      } else {
+        chestDescription = "natural fabric texture with soft, realistic folds, creases, and gentle wrinkles that give the clothing a realistic 3D volume";
+        lightingDescription = "soft directional lighting highlighting the natural 3D shape and wrinkles of the fabric";
+
+        if (sleeveLength === 'sleeveless') {
+          outfitDescription = "a plain white sleeveless bodysuit, slightly loose to show natural folds";
+          armsDescription = "completely bare arms and shoulders clearly visible";
+        } else if (sleeveLength === 'short sleeves') {
+          outfitDescription = "a plain white short-sleeve bodysuit, slightly loose to show natural folds";
+          armsDescription = "bare forearms clearly visible";
+        } else if (sleeveLength === 'long sleeves') {
+          outfitDescription = "a plain white long-sleeve bodysuit, slightly loose to show natural folds";
+          armsDescription = "arms completely covered by sleeves with natural fabric folds";
+        }
+
+        if (pantsLength === 'no pants') {
+          legsDescription = "completely bare legs";
+        } else if (pantsLength === 'short pants') {
+          legsDescription = "bare lower legs";
+        } else if (pantsLength === 'long pants') {
+          legsDescription = "legs completely covered by pants showing natural fabric folds";
+        }
+      }
+
+      console.log("Generating baby image...");
+      // Imagen4系(imagen-4.0-generate-001)は2026年8月17日付けでシャットダウン済みのため、
+      // Gemini画像生成モデル(Nano Banana系)の generateContent エンドポイントに切り替え
+      const imagenUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key=${geminiApiKey}`;
+      
+      const babyPrompt = `A professional studio photograph of a cute ${raceDescription} ${gender} baby, about 6-12 months old, ${postureDescription}. The baby is on a soft, plush, textured cream-colored rug or blanket. Wide angle shot, zoomed out. The ENTIRE head, face, and body MUST be completely visible perfectly inside the frame. The baby MUST be wearing ${outfitDescription} with ${chestDescription}. The baby has ${armsDescription} and ${legsDescription}. Bareheaded, strictly NO hats or hair accessories. The lighting is ${lightingDescription}. The background is a seamless, simple, neutral color filling the entire frame naturally without any borders, frames, or margins. High resolution, highly detailed, realistic.`;
+
+      const imagenResponse = await fetch(imagenUrl, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${fashnKey}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model_name: "tryon-max",
-          inputs: { "model_image": modelImage, "product_image": productPreview },
-          category: category,
-          guidance_scale: 2.8,
-          timesteps: 50,
-          long_description: instruction
+          contents: [{ parts: [{ text: babyPrompt }] }],
+          generationConfig: {
+            responseModalities: ["TEXT", "IMAGE"],
+            imageConfig: { aspectRatio: "1:1" }
+          }
         })
       });
-      const fashnData = await fashnRes.json();
+
+      if (!imagenResponse.ok) {
+        const errorText = await imagenResponse.text();
+        throw new Error(`Google AIエラー (モデル生成失敗): ${errorText}`);
+      }
+
+      const imagenData = await imagenResponse.json();
+      const imagePart = imagenData?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+      if (!imagePart) {
+        throw new Error(`Google AIエラー (画像データが返されませんでした): ${JSON.stringify(imagenData)}`);
+      }
+      const generatedMimeType = imagePart.inlineData.mimeType || 'image/png';
+      const generatedBabyImage = `data:${generatedMimeType};base64,${imagePart.inlineData.data}`;
+      console.log("Baby image generated successfully.");
+
+      console.log("Starting Fashn.ai job...");
+
+      // =================================================================
+      // ★ ここでFashn.aiのモデル（クレジット消費）を切り替えられます
+      // =================================================================
+      // "tryon-max" : 最高精度モデル（1回 2クレジット）※推奨
+      // "tryon-v1.6": 標準モデル（1回 1クレジット）
+      const selectedModel = "tryon-max"; 
+
+      // Fashn.aiに送る画像データ（モデルによって名前のルールが違うため自動切替）
+      const fashnInputs = {
+        model_image: generatedBabyImage
+      };
+      
+      if (selectedModel === "tryon-max") {
+        fashnInputs.product_image = garmentImageBase64; // maxモデル用の名前
+      } else {
+        fashnInputs.garment_image = garmentImageBase64; // v1.6モデル用の名前
+      }
+
+      const fashnResponse = await fetch('https://api.fashn.ai/v1/run', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${fashnApiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model_name: selectedModel,
+          inputs: fashnInputs
+        })
+      });
+
+      if (!fashnResponse.ok) {
+        const errorDetail = await fashnResponse.text();
+        throw new Error(`Fashn APIエラー (着画生成開始失敗): ${errorDetail}`);
+      }
+      const fashnData = await fashnResponse.json();
+      
       return res.status(200).json({ jobId: fashnData.id });
     }
-
-    if (action === 'status') {
+    
+    else if (action === 'status') {
       const { jobId } = req.body;
-      const resStatus = await fetch(`https://api.fashn.ai/v1/status/${jobId}`, {
-        headers: { 'Authorization': `Bearer ${fashnKey}` }
+      const response = await fetch(`https://api.fashn.ai/v1/status/${jobId}`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${fashnApiKey}` }
       });
-      return res.status(200).json(await resStatus.json());
+
+      if (!response.ok) {
+        const errorDetail = await response.text();
+        throw new Error(`ステータス確認エラー: ${errorDetail}`);
+      }
+      const data = await response.json();
+      return res.status(200).json(data);
     }
-  } catch (error) { res.status(500).json({ error: error.message }); }
+    
+    else if (action === 'delete') {
+      const { jobId } = req.body;
+      console.log(`Deleting job from Fashn.ai: ${jobId}`);
+      
+      const response = await fetch(`https://api.fashn.ai/v1/job/${jobId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${fashnApiKey}` }
+      });
+
+      if (!response.ok) {
+        const errorDetail = await response.text();
+        console.error(`Fashn API 削除エラー: ${errorDetail}`);
+        return res.status(500).json({ error: '削除に失敗しました' });
+      }
+
+      return res.status(200).json({ message: 'Deleted successfully' });
+    }
+
+    else {
+      return res.status(400).json({ error: 'Invalid action' });
+    }
+
+  } catch (error) {
+    console.error("API Error:", error);
+    res.status(500).json({ error: error.message });
+  }
 }
