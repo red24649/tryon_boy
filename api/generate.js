@@ -23,7 +23,7 @@ export default async function handler(req, res) {
 
       // ポーズのマッピング
       const poseMap = {
-        'natural_lean': 'Standing confidently facing forward, arms relaxed at sides, full body visible, natural relaxed posture',
+        'natural_lean': 'Standing casually facing mostly forward with a natural relaxed posture, weight shifted slightly onto one leg (either side) causing a subtle relaxed tilt in the hips and shoulders, NOT perfectly symmetrical, NOT stiffly straight, one knee slightly bent, arms relaxed at sides, full body visible, candid unposed feel like a natural snapshot',
         'walking_snapshot': 'Walking forward naturally, one foot slightly ahead, arms swinging gently, candid snapshot feel',
         'energetic_jump': 'Jumping energetically in the air with arms raised, happy and dynamic pose, full body visible',
         'looking_away': 'Standing at a slight angle, head turned to the side looking away from camera, cool and stylish pose'
