@@ -39,20 +39,27 @@ export default async function handler(req, res) {
       // 3. Imagen 4.0 プロンプト: カタログ品質の110cmキッズを生成
       const modelPrompt = `A high-end professional fashion catalog photograph of a ${raceDescription} ${gender} child, 5 years old, height 110cm. The child has an energetic expression and a natural smile. Posture: Standing confidently facing forward, arms relaxed, full body visible. Wearing: ${outfitBase}. Head: ${hatPrompt}. Background: Minimalist clean light gray studio. High resolution, commercial lighting, realistic skin and fabric textures. F.O.KIDS style.`;
 
-      // 4. Imagen 4.0 リクエスト (Google Generative AI)
-      const imagenRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${geminiApiKey}`, {
+      // 4. Gemini画像生成モデル (Nano Banana系) リクエスト
+      // Imagen4系(imagen-4.0-generate-001)は2026年8月17日付けでシャットダウン済みのため、
+      // gemini-3.1-flash-image + generateContent エンドポイントに切り替え
+      const imagenRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key=${geminiApiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          instances: [{ prompt: modelPrompt }],
-          parameters: { sampleCount: 1, aspectRatio: "1:1" }
+          contents: [{ parts: [{ text: modelPrompt }] }],
+          generationConfig: {
+            responseModalities: ["TEXT", "IMAGE"],
+            imageConfig: { aspectRatio: "1:1" }
+          }
         })
       });
       const imagenData = await imagenRes.json();
-      if (!imagenData.predictions || !imagenData.predictions[0]) {
-        throw new Error("Imagen generation failed: " + JSON.stringify(imagenData));
+      const modelImagePart = imagenData?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+      if (!modelImagePart) {
+        throw new Error("Gemini image generation failed: " + JSON.stringify(imagenData));
       }
-      const modelImageBase64 = `data:image/jpeg;base64,${imagenData.predictions[0].bytesBase64Encoded}`;
+      const modelMimeType = modelImagePart.inlineData.mimeType || 'image/png';
+      const modelImageBase64 = `data:${modelMimeType};base64,${modelImagePart.inlineData.data}`;
 
       // 5. Fashn.ai (tryon-max) でアイテムを合成
       const fashnInputs = { model_image: modelImageBase64 };
