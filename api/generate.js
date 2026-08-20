@@ -65,7 +65,7 @@ export default async function handler(req, res) {
         : "barefoot on clean floor";
 
       // 背景：撮影機材（ソフトボックス・アンブレラ等）が映り込まないよう明示的に指定
-      const modelPrompt = `A high-end professional fashion catalog photograph of a ${raceDescription} boy child, 5 years old, height 110cm. The child has a ${expressionDescription}. Posture: ${poseDescription}. Wearing: ${outfitBase}. ${fabricTexturePrompt} Hair and head: ${hatPrompt}. Feet: ${footwearPrompt}. Background: Completely seamless solid light gray backdrop filling the entire frame, absolutely NO visible studio equipment, NO lighting rigs, NO softboxes, NO umbrellas, NO shadows of equipment. High resolution, soft directional lighting that highlights fabric texture and volume, realistic skin and fabric textures.`;
+      const modelPrompt = `A high-end professional fashion catalog photograph of a ${raceDescription} boy child, 5 years old, height 110cm. The child has a ${expressionDescription}. Posture: ${poseDescription}. Wearing: ${outfitBase}. ${fabricTexturePrompt} Hair and head: ${hatPrompt}. Feet: ${footwearPrompt}. Background: Completely seamless solid light gray backdrop filling the entire frame, absolutely NO visible studio equipment, NO lighting rigs, NO softboxes, NO umbrellas, NO shadows of equipment. High resolution, bright and evenly lit high-key studio lighting typical of e-commerce product photography, well-exposed with minimal harsh shadows, soft fill light bringing out gentle fabric texture without darkening the overall image, realistic skin and fabric textures.`;
 
       console.log("Starting Gemini image generation for create_model...");
       const startTime = Date.now();
