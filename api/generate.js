@@ -139,7 +139,10 @@ export default async function handler(req, res) {
           },
           category: category || "tops",
           resolution: "4k",
-          generation_mode: "quality"
+          generation_mode: "quality",
+          // セキュリティ強化：公開CDN URLではなくBase64で直接返却させ、
+          // サーバー側の画像保持期間を3日間→最大60分に短縮し、リクエスト履歴にも画像を残さない
+          return_base64: true
         })
       });
 
