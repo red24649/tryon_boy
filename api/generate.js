@@ -53,14 +53,17 @@ export default async function handler(req, res) {
       outfitBase += " and ";
       // ボトムス：ロールアップ防止のためフルレングスを明示
       outfitBase += hasBottom ? "plain white full-length straight-leg pants reaching the ankles, NOT rolled up, NOT cuffed" : "classic blue denim pants with a natural washed texture";
-      const hatPrompt = hasHat ? "bareheaded, no hat" : "no hat, neat and cool hairstyle";
-      // 足元：靴を着せ替える場合は白い靴下＋シンプルな白スニーカーの下地にする（裸足だと靴のフィットが不自然になるため）
+      // 髪型：横分けを避け、少し長め・無造作でストリート感のあるスタイルを明示
+      const hatPrompt = hasHat
+        ? "bareheaded, no hat, medium-length tousled messy hair with natural texture, slightly longer on top with a casual street-style look, NOT side-parted"
+        : "no hat, medium-length tousled messy hair with natural texture, slightly longer on top with a casual street-style look, NOT side-parted";
+      // 足元：靴を着せ替える場合は素足の下地にする（サンダル等の靴下無しタイプにも対応できるよう、靴下は履かせない）
       const footwearPrompt = hasShoe
-        ? "wearing plain white ankle socks and simple plain white sneakers as a base for shoe overlay"
+        ? "barefoot with clean bare feet and ankles fully visible, no socks, as a base for shoe overlay"
         : "barefoot on clean floor";
 
       // 背景：撮影機材（ソフトボックス・アンブレラ等）が映り込まないよう明示的に指定
-      const modelPrompt = `A high-end professional fashion catalog photograph of a ${raceDescription} boy child, 5 years old, height 110cm. The child has a ${expressionDescription}. Posture: ${poseDescription}. Wearing: ${outfitBase}. Head: ${hatPrompt}. Feet: ${footwearPrompt}. Background: Completely seamless solid light gray backdrop filling the entire frame, absolutely NO visible studio equipment, NO lighting rigs, NO softboxes, NO umbrellas, NO shadows of equipment. High resolution, soft even lighting, realistic skin and fabric textures.`;
+      const modelPrompt = `A high-end professional fashion catalog photograph of a ${raceDescription} boy child, 5 years old, height 110cm. The child has a ${expressionDescription}. Posture: ${poseDescription}. Wearing: ${outfitBase}. Hair and head: ${hatPrompt}. Feet: ${footwearPrompt}. Background: Completely seamless solid light gray backdrop filling the entire frame, absolutely NO visible studio equipment, NO lighting rigs, NO softboxes, NO umbrellas, NO shadows of equipment. High resolution, soft even lighting, realistic skin and fabric textures.`;
 
       console.log("Starting Gemini image generation for create_model...");
       const startTime = Date.now();
