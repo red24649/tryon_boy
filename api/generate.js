@@ -42,7 +42,7 @@ export default async function handler(req, res) {
       const raceMap = {
         'Japanese': 'fully Japanese',
         'Caucasian': 'fully Caucasian',
-        'half-Caucasian, half-Japanese': 'Eurasian mixed-race (Caucasian-Japanese blend), leaning slightly more towards Caucasian facial features with soft brown hair'
+        'half-Caucasian, half-Japanese': 'Eurasian mixed-race child of one Japanese parent and one Caucasian (Western) parent, with fair light skin tone (noticeably lighter than typical Japanese skin tone), softer facial features blending Japanese and Caucasian traits, and soft brown or light brown hair'
       };
       const raceDescription = raceMap[race] || raceMap['Japanese'];
 
