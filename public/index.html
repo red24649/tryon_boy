@@ -110,6 +110,11 @@
           <img id="resultImg" class="hidden w-full h-auto rounded-[2.5rem]">
           <div id="placeholder" class="text-slate-300 font-bold uppercase tracking-widest text-xs italic">Waiting for styles</div>
           <button id="downloadBtn" class="hidden absolute bottom-10 right-10 bg-white shadow-lg p-6 rounded-full border border-slate-100 text-slate-900"> </button>
+          <div id="previewActions" class="hidden absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-3 items-center bg-white/95 backdrop-blur px-5 py-3 rounded-full shadow-lg border border-slate-100">
+            <span class="text-xs font-bold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full">プレビュー（低解像度）</span>
+            <button id="confirmBtn" class="bg-blue-600 text-white px-5 py-2.5 rounded-full font-bold text-sm hover:bg-blue-700">この内容で高画質生成</button>
+            <button id="redoBtn" class="bg-slate-100 text-slate-600 px-5 py-2.5 rounded-full font-bold text-sm hover:bg-slate-200">やり直す</button>
+          </div>
         </div>
       </div>
     </div>
@@ -139,23 +144,34 @@
     setupUpload('shoeInput', 'dropZoneShoe', 'previewShoe', 'shoe');
 
     const generateBtn = document.getElementById('generateBtn'), statusLabel = document.getElementById('statusLabel'), resultImg = document.getElementById('resultImg'), loading = document.getElementById('loading');
+    // プレビュー結果から本生成に進む際に再利用するための保存領域
+    let lastBaseModel = null, lastTasks = [], lastPose = null;
 
-    async function processSequentially(currentModel, tasks, total, selectedPose) {
+    async function processSequentially(currentModel, tasks, total, selectedPose, previewMode) {
       if (tasks.length === 0) {
         resultImg.src = currentModel; resultImg.classList.remove('hidden'); loading.classList.add('hidden');
-        document.getElementById('downloadBtn').classList.remove('hidden'); generateBtn.disabled = false;
+        if (previewMode) {
+          // プレビュー完了：本生成ボタン・やり直しボタンを表示し、ダウンロードは不可にする
+          document.getElementById('previewActions').classList.remove('hidden');
+          document.getElementById('downloadBtn').classList.add('hidden');
+        } else {
+          // 本生成完了：ダウンロード可能にする
+          document.getElementById('previewActions').classList.add('hidden');
+          document.getElementById('downloadBtn').classList.remove('hidden');
+          generateBtn.disabled = false;
+        }
         return;
       }
       const task = tasks.shift();
       const currentStep = total - tasks.length;
       document.querySelectorAll('.step-dot').forEach((d, i) => d.classList.toggle('active', i === currentStep));
-      statusLabel.innerText = `${task.label}を合成中`;
+      statusLabel.innerText = previewMode ? `${task.label}をプレビュー合成中` : `${task.label}を高画質合成中`;
 
       try {
         const res = await fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'start', modelImage: currentModel, productPreview: task.image, category: task.category, pose: selectedPose })
+          body: JSON.stringify({ action: 'start', modelImage: currentModel, productPreview: task.image, category: task.category, pose: selectedPose, previewMode: !!previewMode })
         });
         const { jobId } = await res.json();
 
@@ -180,7 +196,7 @@
             
             if (sData.status === 'completed') {
               clearInterval(timer);
-              processSequentially(sData.output[0], tasks, total, selectedPose);
+              processSequentially(sData.output[0], tasks, total, selectedPose, previewMode);
             } else if (sData.status === 'failed') { 
               clearInterval(timer); 
               alert("合成に失敗しました。画像を変えて再度お試しください。"); 
@@ -206,6 +222,7 @@
       const expression = document.querySelector('input[name="expression"]:checked').value;
       const race = document.querySelector('input[name="race"]:checked').value;
       document.getElementById('placeholder').classList.add('hidden'); resultImg.classList.add('hidden'); loading.classList.remove('hidden'); generateBtn.disabled = true;
+      document.getElementById('previewActions').classList.add('hidden'); document.getElementById('downloadBtn').classList.add('hidden');
       document.querySelectorAll('.step-dot').forEach((d, i) => d.classList.toggle('active', i === 0));
       statusLabel.innerText = "ベースモデル(影・物理補正)生成中";
 
@@ -221,11 +238,16 @@
         if (state.top) tasks.push({ image: state.top, category: "tops", label: "トップス" });
         if (state.shoe) tasks.push({ image: state.shoe, category: "shoes", label: "靴" });
         if (state.hat) tasks.push({ image: state.hat, category: "accessories", label: "帽子" });
-        
+
+        // 本生成に進む際に再利用できるよう保存（プレビュー用にshiftで消費されるためコピーを保存）
+        lastBaseModel = modelImage; lastTasks = tasks.slice(); lastPose = pose;
+
         if (tasks.length === 0) {
+            // 着せ替えアイテムがない場合はプレビューの意味がないため、そのまま結果表示
             resultImg.src = modelImage; resultImg.classList.remove('hidden'); loading.classList.add('hidden'); generateBtn.disabled = false;
+            document.getElementById('downloadBtn').classList.remove('hidden');
         } else {
-            processSequentially(modelImage, tasks, tasks.length, pose);
+            processSequentially(modelImage, tasks.slice(), tasks.length, pose, true);
         }
       } catch (e) { 
         alert("エラーが発生しました。"); 
@@ -233,6 +255,26 @@
         loading.classList.add('hidden'); 
         document.getElementById('placeholder').classList.remove('hidden');
       }
+    };
+
+    document.getElementById('confirmBtn').onclick = () => {
+      if (!lastBaseModel || lastTasks.length === 0) return;
+      document.getElementById('previewActions').classList.add('hidden');
+      resultImg.classList.add('hidden'); loading.classList.remove('hidden'); generateBtn.disabled = true;
+      document.querySelectorAll('.step-dot').forEach((d, i) => d.classList.toggle('active', i === 0));
+      statusLabel.innerText = "高画質で本生成を開始します";
+      // 保存しておいたベースモデルとタスク一覧を使い、今度は本生成（quality + 4k）で実行
+      processSequentially(lastBaseModel, lastTasks.slice(), lastTasks.length, lastPose, false);
+    };
+
+    document.getElementById('redoBtn').onclick = () => {
+      // プレビューを破棄し、設定変更のために初期状態に戻す（アップロード済みアイテムは維持）
+      document.getElementById('previewActions').classList.add('hidden');
+      resultImg.classList.add('hidden');
+      document.getElementById('placeholder').classList.remove('hidden');
+      document.getElementById('downloadBtn').classList.add('hidden');
+      generateBtn.disabled = false;
+      lastBaseModel = null; lastTasks = []; lastPose = null;
     };
     
     document.getElementById('downloadBtn').onclick = async () => {
