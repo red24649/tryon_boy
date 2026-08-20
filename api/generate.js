@@ -40,12 +40,15 @@ export default async function handler(req, res) {
 
       // 服装ベース（Fashn.aiで後から着せ替えるアイテムは白い下地にする）
       let outfitBase = "";
-      outfitBase += hasTop ? "a plain thin white inner t-shirt" : "a trendy white short-sleeve t-shirt";
+      // トップス：Fashn.aiで上書きする場合はゆったりめの白Tにして、着せ替え後のサイズ感を大きく見せる
+      outfitBase += hasTop ? "a slightly oversized plain white crewneck t-shirt" : "a trendy white short-sleeve t-shirt";
       outfitBase += " and ";
-      outfitBase += hasBottom ? "plain white slim leggings" : "classic blue denim pants with a natural washed texture";
+      // ボトムス：ロールアップ防止のためフルレングスを明示
+      outfitBase += hasBottom ? "plain white full-length straight-leg pants reaching the ankles, NOT rolled up, NOT cuffed" : "classic blue denim pants with a natural washed texture";
       const hatPrompt = hasHat ? "bareheaded, no hat" : "no hat, neat and cool hairstyle";
 
-      const modelPrompt = `A high-end professional fashion catalog photograph of a Japanese boy child, 5 years old, height 110cm. The child has a ${expressionDescription}. Posture: ${poseDescription}. Wearing: ${outfitBase}. Head: ${hatPrompt}. Barefoot on clean floor. Background: Minimalist clean light gray studio backdrop. High resolution, commercial studio lighting, realistic skin and fabric textures.`;
+      // 背景：撮影機材（ソフトボックス・アンブレラ等）が映り込まないよう明示的に指定
+      const modelPrompt = `A high-end professional fashion catalog photograph of a Japanese boy child, 5 years old, height 110cm. The child has a ${expressionDescription}. Posture: ${poseDescription}. Wearing: ${outfitBase}. Head: ${hatPrompt}. Barefoot on clean floor. Background: Completely seamless solid light gray backdrop filling the entire frame, absolutely NO visible studio equipment, NO lighting rigs, NO softboxes, NO umbrellas, NO shadows of equipment. High resolution, soft even lighting, realistic skin and fabric textures.`;
 
       console.log("Starting Gemini image generation for create_model...");
       const startTime = Date.now();
