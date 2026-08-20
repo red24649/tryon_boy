@@ -110,13 +110,13 @@ export default async function handler(req, res) {
     // ステップ2: start ? モデル画像＋服画像をFashn.aiに送信
     // ============================================================
     else if (action === 'start') {
-      const { modelImage, productPreview, category } = req.body;
+      const { modelImage, productPreview, category, previewMode } = req.body;
 
       if (!modelImage || !productPreview) {
         return res.status(400).json({ error: 'modelImage と productPreview が必要です' });
       }
 
-      console.log(`Starting Fashn.ai job for category: ${category}`);
+      console.log(`Starting Fashn.ai job for category: ${category}, previewMode: ${!!previewMode}`);
 
       // カテゴリに応じた自然な着用感（しわ・フィット感）を促すプロンプト
       const stylingPromptMap = {
@@ -126,6 +126,11 @@ export default async function handler(req, res) {
         accessories: "natural fit and drape"
       };
       const stylingPrompt = stylingPromptMap[category] || stylingPromptMap.tops;
+
+      // プレビューモード：低解像度・高速・低クレジットで確認用の合成を行う
+      // 本生成モード：高解像度・高精度で最終出力を行う
+      const resolution = previewMode ? "1k" : "4k";
+      const generationMode = previewMode ? "fast" : "quality";
 
       const fashnRes = await fetch('https://api.fashn.ai/v1/run', {
         method: 'POST',
@@ -138,8 +143,8 @@ export default async function handler(req, res) {
             prompt: stylingPrompt
           },
           category: category || "tops",
-          resolution: "4k",
-          generation_mode: "quality",
+          resolution: resolution,
+          generation_mode: generationMode,
           // セキュリティ強化：公開CDN URLではなくBase64で直接返却させ、
           // サーバー側の画像保持期間を3日間→最大60分に短縮し、リクエスト履歴にも画像を残さない
           return_base64: true
