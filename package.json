@@ -1,8 +1,11 @@
 {
-  "name": "boy-kisekae-app",
+  "name": "tryon-boys-app",
   "version": "1.0.0",
   "description": "Boy Kisekae Maker",
   "scripts": {
     "start": "node"
+  },
+  "dependencies": {
+    "@vercel/edge": "^1.1.1"
   }
 }
