@@ -80,7 +80,7 @@ export default async function handler(req, res) {
           contents: [{ parts: [{ text: modelPrompt }] }],
           generationConfig: {
             responseModalities: ["TEXT", "IMAGE"],
-            imageConfig: { aspectRatio: "1:1" }
+            imageConfig: { aspectRatio: "3:4" }
           }
         })
       });
@@ -138,7 +138,7 @@ export default async function handler(req, res) {
             prompt: stylingPrompt
           },
           category: category || "tops",
-          resolution: "2k",
+          resolution: "4k",
           generation_mode: "quality"
         })
       });
