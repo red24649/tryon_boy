@@ -53,6 +53,8 @@ export default async function handler(req, res) {
       outfitBase += " and ";
       // ボトムス：ロールアップ防止のためフルレングスを明示
       outfitBase += hasBottom ? "plain white full-length straight-leg pants reaching the ankles, NOT rolled up, NOT cuffed" : "classic blue denim pants with a natural washed texture";
+      // 生地の質感：不自然な平坦さを避け、自然なしわ・折り目を明示
+      const fabricTexturePrompt = "The fabric of the clothing has natural texture with soft, realistic folds, creases, and gentle wrinkles that give it authentic 3D volume, NOT flat, NOT perfectly smooth, NOT ironed-flat.";
       // 髪型：横分けを避け、少し長め・無造作でストリート感のあるスタイルを明示
       const hatPrompt = hasHat
         ? "bareheaded, no hat, medium-length tousled messy hair with natural texture, slightly longer on top with a casual street-style look, NOT side-parted"
@@ -63,7 +65,7 @@ export default async function handler(req, res) {
         : "barefoot on clean floor";
 
       // 背景：撮影機材（ソフトボックス・アンブレラ等）が映り込まないよう明示的に指定
-      const modelPrompt = `A high-end professional fashion catalog photograph of a ${raceDescription} boy child, 5 years old, height 110cm. The child has a ${expressionDescription}. Posture: ${poseDescription}. Wearing: ${outfitBase}. Hair and head: ${hatPrompt}. Feet: ${footwearPrompt}. Background: Completely seamless solid light gray backdrop filling the entire frame, absolutely NO visible studio equipment, NO lighting rigs, NO softboxes, NO umbrellas, NO shadows of equipment. High resolution, soft even lighting, realistic skin and fabric textures.`;
+      const modelPrompt = `A high-end professional fashion catalog photograph of a ${raceDescription} boy child, 5 years old, height 110cm. The child has a ${expressionDescription}. Posture: ${poseDescription}. Wearing: ${outfitBase}. ${fabricTexturePrompt} Hair and head: ${hatPrompt}. Feet: ${footwearPrompt}. Background: Completely seamless solid light gray backdrop filling the entire frame, absolutely NO visible studio equipment, NO lighting rigs, NO softboxes, NO umbrellas, NO shadows of equipment. High resolution, soft directional lighting that highlights fabric texture and volume, realistic skin and fabric textures.`;
 
       console.log("Starting Gemini image generation for create_model...");
       const startTime = Date.now();
