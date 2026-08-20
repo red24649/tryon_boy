@@ -118,6 +118,15 @@ export default async function handler(req, res) {
 
       console.log(`Starting Fashn.ai job for category: ${category}`);
 
+      // カテゴリに応じた自然な着用感（しわ・フィット感）を促すプロンプト
+      const stylingPromptMap = {
+        tops: "natural fabric drape with realistic wrinkles and folds around the shoulders, chest, and sleeves, not flat or ironed-looking",
+        bottoms: "natural fabric drape with realistic wrinkles and folds around the hips, knees, and hem, not flat or ironed-looking",
+        shoes: "natural fit hugging the shape of the feet",
+        accessories: "natural fit and drape"
+      };
+      const stylingPrompt = stylingPromptMap[category] || stylingPromptMap.tops;
+
       const fashnRes = await fetch('https://api.fashn.ai/v1/run', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${fashnApiKey}`, 'Content-Type': 'application/json' },
@@ -125,11 +134,12 @@ export default async function handler(req, res) {
           model_name: "tryon-max",
           inputs: {
             model_image: modelImage,
-            product_image: productPreview
+            product_image: productPreview,
+            prompt: stylingPrompt
           },
           category: category || "tops",
-          guidance_scale: 2.5,
-          timesteps: 50
+          resolution: "2k",
+          generation_mode: "quality"
         })
       });
 
