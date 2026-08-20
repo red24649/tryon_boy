@@ -160,7 +160,7 @@
         const { jobId } = await res.json();
 
         let attempts = 0;
-        const maxAttempts = 45; // 最大180秒（4秒×45回）待機（quality生成モードは処理時間が伸びるため）
+        const maxAttempts = 60; // 最大240秒（4秒×60回）待機（quality + 4k生成モードは処理時間が伸びるため）
 
         const timer = setInterval(async () => {
           attempts++;
