@@ -1,5 +1,5 @@
 // Vercel Serverless Function: api/generate.js
-export const maxDuration = 60;
+export const maxDuration = 300;
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } };
 
 export default async function handler(req, res) {
@@ -42,17 +42,25 @@ export default async function handler(req, res) {
       // 4. Gemini画像生成モデル (Nano Banana系) リクエスト
       // Imagen4系(imagen-4.0-generate-001)は2026年8月17日付けでシャットダウン済みのため、
       // gemini-3.1-flash-image + generateContent エンドポイントに切り替え
+      // Gemini APIにタイムアウト制御を追加（120秒）
+      const abortController = new AbortController();
+      const fetchTimeout = setTimeout(() => abortController.abort(), 120000);
+
       const imagenRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key=${geminiApiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: abortController.signal,
         body: JSON.stringify({
           contents: [{ parts: [{ text: modelPrompt }] }],
           generationConfig: {
             responseModalities: ["TEXT", "IMAGE"],
-            imageConfig: { aspectRatio: "1:1" }
+            imageConfig: { aspectRatio: "1:1" },
+            // 思考(thinking)をLOWに設定して画像生成を高速化
+            thinkingConfig: { thinkingBudget: 0 }
           }
         })
       });
+      clearTimeout(fetchTimeout);
       const imagenData = await imagenRes.json();
       const modelImagePart = imagenData?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
       if (!modelImagePart) {
