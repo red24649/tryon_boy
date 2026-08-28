@@ -91,9 +91,9 @@ export default async function handler(req, res) {
           ? `natural shoulder-length hair, straight or with a very slight wave, simple and soft with minimal styling, with ${hairColorPrompt}`
           : `neat, natural short-to-medium hair with soft natural texture, simple everyday cut with minimal styling, NOT overly messy, with ${hairColorPrompt}`;
       } else {
-        // カジュアル（デフォルト・従来通り）
+        // カジュアル（デフォルト）
         hairStyleBase = genderWord === 'girl'
-          ? `shoulder-length hair with gentle natural waves at the ends, with ${hairColorPrompt}, neat and cute, half-up style optional`
+          ? `cute and playful two-side-up or low twin-tail hairstyle with the hair loosely gathered on both sides, soft loose curls or gentle waves at the ends, wispy face-framing bangs, adorned with small, subtle, tasteful hair accessories such as a tiny floral clip or a soft ribbon (NOT flashy, NOT oversized), with ${hairColorPrompt}, natural and stylish`
           : `medium-length tousled messy hair with ${hairColorPrompt}, slightly longer on top with a casual street-style look, NOT side-parted`;
       }
 
