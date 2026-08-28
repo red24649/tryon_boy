@@ -93,6 +93,15 @@
               <label><input type="radio" name="race" value="Caucasian" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">欧米系</div></label>
             </div>
           </div>
+          <div>
+            <h2 class="text-lg font-bold text-slate-800 mb-4">
+              ⑤ アイテムの種類
+            </h2>
+            <div class="grid grid-cols-2 gap-2">
+              <label><input type="radio" name="outfitStyle" value="western" class="hidden" checked><div class="select-card text-center py-2 text-[10px] font-bold">洋服</div></label>
+              <label><input type="radio" name="outfitStyle" value="wafuku" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">和装（着物・袴）</div></label>
+            </div>
+          </div>
         </section>
 
         <button id="generateBtn" class="w-full bg-blue-600 text-white py-6 rounded-[2rem] font-black text-lg hover:bg-blue-700 transition-all shadow-xl active:scale-95 disabled:opacity-50">
@@ -147,9 +156,9 @@
 
     const generateBtn = document.getElementById('generateBtn'), statusLabel = document.getElementById('statusLabel'), resultImg = document.getElementById('resultImg'), loading = document.getElementById('loading');
     // プレビュー結果から本生成に進む際に再利用するための保存領域
-    let lastBaseModel = null, lastTasks = [], lastPose = null;
+    let lastBaseModel = null, lastTasks = [], lastPose = null, lastOutfitStyle = null;
 
-    async function processSequentially(currentModel, tasks, total, selectedPose, previewMode) {
+    async function processSequentially(currentModel, tasks, total, selectedPose, previewMode, outfitStyle) {
       if (tasks.length === 0) {
         resultImg.src = currentModel; resultImg.classList.remove('hidden'); loading.classList.add('hidden');
         if (previewMode) {
@@ -173,7 +182,7 @@
         const res = await fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'start', modelImage: currentModel, productPreview: task.image, category: task.category, pose: selectedPose, previewMode: !!previewMode })
+          body: JSON.stringify({ action: 'start', modelImage: currentModel, productPreview: task.image, category: task.category, pose: selectedPose, previewMode: !!previewMode, outfitStyle })
         });
         const { jobId } = await res.json();
 
@@ -198,7 +207,7 @@
             
             if (sData.status === 'completed') {
               clearInterval(timer);
-              processSequentially(sData.output[0], tasks, total, selectedPose, previewMode);
+              processSequentially(sData.output[0], tasks, total, selectedPose, previewMode, outfitStyle);
             } else if (sData.status === 'failed') { 
               clearInterval(timer); 
               alert("合成に失敗しました。画像を変えて再度お試しください。"); 
@@ -223,6 +232,7 @@
       const pose = document.querySelector('input[name="pose"]:checked').value;
       const expression = document.querySelector('input[name="expression"]:checked').value;
       const race = document.querySelector('input[name="race"]:checked').value;
+      const outfitStyle = document.querySelector('input[name="outfitStyle"]:checked').value;
       document.getElementById('placeholder').classList.add('hidden'); resultImg.classList.add('hidden'); loading.classList.remove('hidden'); generateBtn.disabled = true;
       document.getElementById('previewActions').classList.add('hidden'); document.getElementById('downloadBtn').classList.add('hidden');
       document.querySelectorAll('.step-dot').forEach((d, i) => d.classList.toggle('active', i === 0));
@@ -232,7 +242,7 @@
         const res = await fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'create_model', pose, expression, race, hasHat: !!state.hat, hasTop: !!state.top, hasBottom: !!state.bottom, hasShoe: !!state.shoe })
+          body: JSON.stringify({ action: 'create_model', pose, expression, race, outfitStyle, hasHat: !!state.hat, hasTop: !!state.top, hasBottom: !!state.bottom, hasShoe: !!state.shoe })
         });
         const { modelImage } = await res.json();
         const tasks = [];
@@ -242,14 +252,14 @@
         if (state.hat) tasks.push({ image: state.hat, category: "accessories", label: "帽子" });
 
         // 本生成に進む際に再利用できるよう保存（プレビュー用にshiftで消費されるためコピーを保存）
-        lastBaseModel = modelImage; lastTasks = tasks.slice(); lastPose = pose;
+        lastBaseModel = modelImage; lastTasks = tasks.slice(); lastPose = pose; lastOutfitStyle = outfitStyle;
 
         if (tasks.length === 0) {
             // 着せ替えアイテムがない場合はプレビューの意味がないため、そのまま結果表示
             resultImg.src = modelImage; resultImg.classList.remove('hidden'); loading.classList.add('hidden'); generateBtn.disabled = false;
             document.getElementById('downloadBtn').classList.remove('hidden');
         } else {
-            processSequentially(modelImage, tasks.slice(), tasks.length, pose, true);
+            processSequentially(modelImage, tasks.slice(), tasks.length, pose, true, outfitStyle);
         }
       } catch (e) { 
         alert("エラーが発生しました。"); 
@@ -266,7 +276,7 @@
       document.querySelectorAll('.step-dot').forEach((d, i) => d.classList.toggle('active', i === 0));
       statusLabel.innerText = "高画質で本生成を開始します";
       // 保存しておいたベースモデルとタスク一覧を使い、今度は本生成（quality + 4k）で実行
-      processSequentially(lastBaseModel, lastTasks.slice(), lastTasks.length, lastPose, false);
+      processSequentially(lastBaseModel, lastTasks.slice(), lastTasks.length, lastPose, false, lastOutfitStyle);
     };
 
     document.getElementById('redoBtn').onclick = () => {
@@ -276,7 +286,7 @@
       document.getElementById('placeholder').classList.remove('hidden');
       document.getElementById('downloadBtn').classList.add('hidden');
       generateBtn.disabled = false;
-      lastBaseModel = null; lastTasks = []; lastPose = null;
+      lastBaseModel = null; lastTasks = []; lastPose = null; lastOutfitStyle = null;
     };
     
     document.getElementById('downloadBtn').onclick = async () => {
