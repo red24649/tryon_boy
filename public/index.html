@@ -179,6 +179,7 @@
       try {
         const res = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'get_credits' }) });
         const data = await res.json();
+        if (data?.error) { console.warn("クレジット残高の取得に失敗しました:", data.error); return null; }
         return data?.credits?.total ?? null;
       } catch (e) {
         console.warn("クレジット残高の取得に失敗しました", e);
