@@ -79,7 +79,7 @@ export default async function handler(req, res) {
         outfitBase += hasBottom ? "plain white full-length straight-leg pants reaching the ankles, NOT rolled up, NOT cuffed" : "classic blue denim pants with a natural washed texture";
       }
       // 生地の質感：不自然な平坦さを避け、自然なしわ・折り目を明示
-      const fabricTexturePrompt = "The fabric of the clothing is very soft, light, thin, and airy, like fine cotton, gauze, or lightweight linen, draping loosely and gently with the body's contours and falling naturally with gravity. It has a delicate, breathable, relaxed texture with soft, subtle folds and gentle wrinkles that give it authentic 3D volume. NOT flat, NOT perfectly smooth, NOT ironed-flat, NOT stiff, NOT rigid, NOT thick, NOT heavy, NOT board-like or cardboard-like, NOT starched-looking, NOT structured or tailored-suit-like.";
+      const fabricTexturePrompt = "The fabric of the clothing is soft and supple with natural drape, moving gently with the body's contours. It has a natural texture with soft folds and gentle wrinkles that give it authentic 3D volume. The fabric is fully opaque with normal everyday weight (like standard cotton or knit fabric), NOT see-through, NOT sheer, NOT thin gauze, NOT translucent. NOT flat, NOT perfectly smooth, NOT ironed-flat, NOT stiff, NOT rigid, NOT board-like or cardboard-like, NOT starched-looking, NOT structured or tailored-suit-like.";
       // 髪型：性別・ヘアスタイル選択で分岐（和装かどうかは問わず、選択したヘアスタイルをそのまま適用）
       // 「日本人（黒髪）」選択時は髪色を明示的に黒に固定（未指定だと茶髪寄りになりがちなため）
       const hairColorPrompt = forceBlackHair ? "natural jet-black hair color (NOT brown, NOT dyed)" : "natural texture";
@@ -162,7 +162,7 @@ export default async function handler(req, res) {
       // 全カテゴリ共通：シンプルで汎用的なプロンプト
       // 長い詳細指示はFashn.aiのモデルを混乱させる傾向があるため、
       // 「元画像のすべてのディテールをそのまま忠実に再現せよ」の一点に絞る
-      const universalPrompt = "Reproduce every visual detail from the reference garment image with pixel-level accuracy: all colors, color boundaries, contrasting edges, trims, stripes, prints, logos, textures, stitching, and hardware. The fabric should look very soft, light, thin, and airy, like fine cotton, gauze, or lightweight linen, draping loosely and gently with realistic soft wrinkles, NOT stiff, NOT rigid, NOT thick, NOT heavy, NOT structured, NOT tailored-suit-like.";
+      const universalPrompt = "Reproduce every visual detail from the reference garment image with pixel-level accuracy: all colors, color boundaries, contrasting edges, trims, stripes, prints, logos, textures, stitching, and hardware. The fabric should look soft and supple with natural drape and realistic soft wrinkles, fully opaque with normal everyday weight, NOT see-through, NOT sheer, NOT thin gauze, NOT stiff, NOT rigid, NOT board-like.";
 
       // 和装・洋服ともにシルエット保持の最低限の指示のみ追加
       const silhouetteHint = outfitStyle === 'wafuku'
