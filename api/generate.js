@@ -80,17 +80,12 @@ export default async function handler(req, res) {
       }
       // 生地の質感：不自然な平坦さを避け、自然なしわ・折り目を明示
       const fabricTexturePrompt = "The fabric of the clothing has natural texture with soft, realistic folds, creases, and gentle wrinkles that give it authentic 3D volume, NOT flat, NOT perfectly smooth, NOT ironed-flat.";
-      // 髪型：性別・ヘアスタイル選択・和装かどうかで分岐
+      // 髪型：性別・ヘアスタイル選択で分岐（和装かどうかは問わず、選択したヘアスタイルをそのまま適用）
       // 「日本人（黒髪）」選択時は髪色を明示的に黒に固定（未指定だと茶髪寄りになりがちなため）
       const hairColorPrompt = forceBlackHair ? "natural jet-black hair color (NOT brown, NOT dyed)" : "natural texture";
 
       let hairStyleBase;
-      if (outfitStyle === 'wafuku') {
-        // 和装の場合：ヘアスタイル選択に関わらず、和装にふさわしいスタイルに固定
-        hairStyleBase = genderWord === 'girl'
-          ? `hair neatly styled up in an elegant, cute Japanese-style updo suitable for kimono photography, with soft face-framing strands and a decorative, adorable finish, with ${hairColorPrompt}`
-          : `neatly combed, slightly refined and elegant short-to-medium hairstyle suitable for formal kimono photography, tidy and polished, NOT messy or tousled, with ${hairColorPrompt}`;
-      } else if (hairStyle === 'natural') {
+      if (hairStyle === 'natural') {
         // ナチュラル：あまり作り込まない、自然な髪型
         hairStyleBase = genderWord === 'girl'
           ? `natural shoulder-length hair, straight or with a very slight wave, simple and soft with minimal styling, with ${hairColorPrompt}`
