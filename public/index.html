@@ -103,6 +103,16 @@
               <label><input type="radio" name="outfitStyle" value="wafuku" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">和装（着物・袴）</div></label>
             </div>
           </div>
+          <div>
+            <h2 class="text-lg font-bold text-slate-800 mb-4">
+              ⑥ 年齢・身長
+            </h2>
+            <div class="grid grid-cols-3 gap-2">
+              <label><input type="radio" name="ageHeight" value="3:100" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">3歳<br>(100cm)</div></label>
+              <label><input type="radio" name="ageHeight" value="5:110" class="hidden" checked><div class="select-card text-center py-2 text-[10px] font-bold">5歳<br>(110cm)</div></label>
+              <label><input type="radio" name="ageHeight" value="7:120" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">7歳<br>(120cm)</div></label>
+            </div>
+          </div>
         </section>
 
         <button id="generateBtn" class="w-full bg-blue-600 text-white py-6 rounded-[2rem] font-black text-lg hover:bg-blue-700 transition-all shadow-xl active:scale-95 disabled:opacity-50">
@@ -263,6 +273,7 @@
       const expression = document.querySelector('input[name="expression"]:checked').value;
       const race = document.querySelector('input[name="race"]:checked').value;
       const outfitStyle = document.querySelector('input[name="outfitStyle"]:checked').value;
+      const [age, height] = document.querySelector('input[name="ageHeight"]:checked').value.split(':');
       document.getElementById('placeholder').classList.add('hidden'); resultImg.classList.add('hidden'); loading.classList.remove('hidden'); generateBtn.disabled = true;
       document.getElementById('previewActions').classList.add('hidden'); document.getElementById('downloadBtn').classList.add('hidden');
       document.getElementById('creditsInfo').classList.add('hidden');
@@ -275,7 +286,7 @@
         const res = await fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'create_model', pose, expression, race, outfitStyle, hasHat: !!state.hat, hasTop: !!state.top, hasBottom: !!state.bottom, hasShoe: !!state.shoe })
+          body: JSON.stringify({ action: 'create_model', pose, expression, race, outfitStyle, age, height, hasHat: !!state.hat, hasTop: !!state.top, hasBottom: !!state.bottom, hasShoe: !!state.shoe })
         });
         const { modelImage } = await res.json();
         const tasks = [];
