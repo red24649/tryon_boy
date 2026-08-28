@@ -64,28 +64,7 @@
         <section class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-8">
           <div>
             <h2 class="text-lg font-bold text-slate-800 mb-4">
-              ② ポーズ選択
-            </h2>
-            <div class="grid grid-cols-2 gap-3">
-              <label><input type="radio" name="pose" value="natural_lean" class="hidden" checked><div class="select-card text-center text-xs font-bold">自然な立ち姿</div></label>
-              <label><input type="radio" name="pose" value="walking_snapshot" class="hidden"><div class="select-card text-center text-xs font-bold">歩き出し</div></label>
-              <label><input type="radio" name="pose" value="energetic_jump" class="hidden"><div class="select-card text-center text-xs font-bold">ジャンプ</div></label>
-              <label><input type="radio" name="pose" value="looking_away" class="hidden"><div class="select-card text-center text-xs font-bold">目線外し</div></label>
-            </div>
-          </div>
-          <div>
-            <h2 class="text-lg font-bold text-slate-800 mb-4">
-              ③ 表情
-            </h2>
-            <div class="grid grid-cols-3 gap-2">
-              <label><input type="radio" name="expression" value="calm_relaxed" class="hidden" checked><div class="select-card text-center py-2 text-[10px] font-bold">リラックス</div></label>
-              <label><input type="radio" name="expression" value="mischievous" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">やんちゃ顔</div></label>
-              <label><input type="radio" name="expression" value="beaming_smile" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">はじける笑顔</div></label>
-            </div>
-          </div>
-          <div>
-            <h2 class="text-lg font-bold text-slate-800 mb-4">
-              ④ 人種
+              ② モデルタイプ
             </h2>
             <div class="grid grid-cols-4 gap-2">
               <label><input type="radio" name="race" value="Japanese-black-hair" class="hidden" checked><div class="select-card text-center py-2 text-[10px] font-bold">日本人（黒髪）</div></label>
@@ -96,16 +75,16 @@
           </div>
           <div>
             <h2 class="text-lg font-bold text-slate-800 mb-4">
-              ⑤ アイテムの種類
+              ③ 性別
             </h2>
             <div class="grid grid-cols-2 gap-2">
-              <label><input type="radio" name="outfitStyle" value="western" class="hidden" checked><div class="select-card text-center py-2 text-[10px] font-bold">洋服</div></label>
-              <label><input type="radio" name="outfitStyle" value="wafuku" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">和装（着物・袴）</div></label>
+              <label><input type="radio" name="gender" value="boy" class="hidden" checked><div class="select-card text-center py-2 text-[10px] font-bold">男児</div></label>
+              <label><input type="radio" name="gender" value="girl" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">女児</div></label>
             </div>
           </div>
           <div>
             <h2 class="text-lg font-bold text-slate-800 mb-4">
-              ⑥ 年齢・身長
+              ④ 年齢・身長
             </h2>
             <div class="grid grid-cols-3 gap-2">
               <label><input type="radio" name="ageHeight" value="3:100" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">3歳<br>(100cm)</div></label>
@@ -115,22 +94,42 @@
           </div>
           <div>
             <h2 class="text-lg font-bold text-slate-800 mb-4">
-              ⑦ 性別
-            </h2>
-            <div class="grid grid-cols-2 gap-2">
-              <label><input type="radio" name="gender" value="boy" class="hidden" checked><div class="select-card text-center py-2 text-[10px] font-bold">男児</div></label>
-              <label><input type="radio" name="gender" value="girl" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">女児</div></label>
-            </div>
-          </div>
-          <div>
-            <h2 class="text-lg font-bold text-slate-800 mb-4">
-              ⑧ ヘアスタイル
+              ⑤ ヘアスタイル
             </h2>
             <div class="grid grid-cols-2 gap-2">
               <label><input type="radio" name="hairStyle" value="natural" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">ナチュラル</div></label>
               <label><input type="radio" name="hairStyle" value="casual" class="hidden" checked><div class="select-card text-center py-2 text-[10px] font-bold">カジュアル</div></label>
             </div>
-            <p class="text-[10px] text-slate-400 mt-2 leading-relaxed">※「和装」選択時は、性別に合わせた和装向けのヘアスタイル（男児：上品めに整えたスタイル／女児：結ったかわいらしいスタイル）が自動的に適用されます</p>
+          </div>
+          <div>
+            <h2 class="text-lg font-bold text-slate-800 mb-4">
+              ⑥ アイテムの種類
+            </h2>
+            <div class="grid grid-cols-2 gap-2">
+              <label><input type="radio" name="outfitStyle" value="western" class="hidden" checked><div class="select-card text-center py-2 text-[10px] font-bold">洋服</div></label>
+              <label><input type="radio" name="outfitStyle" value="wafuku" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">和装（着物・袴）</div></label>
+            </div>
+          </div>
+          <div>
+            <h2 class="text-lg font-bold text-slate-800 mb-4">
+              ⑦ 表情
+            </h2>
+            <div class="grid grid-cols-3 gap-2">
+              <label><input type="radio" name="expression" value="calm_relaxed" class="hidden" checked><div class="select-card text-center py-2 text-[10px] font-bold">リラックス</div></label>
+              <label><input type="radio" name="expression" value="mischievous" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">やんちゃ顔</div></label>
+              <label><input type="radio" name="expression" value="beaming_smile" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">はじける笑顔</div></label>
+            </div>
+          </div>
+          <div>
+            <h2 class="text-lg font-bold text-slate-800 mb-4">
+              ⑧ ポーズ選択
+            </h2>
+            <div class="grid grid-cols-2 gap-3">
+              <label><input type="radio" name="pose" value="natural_lean" class="hidden" checked><div class="select-card text-center text-xs font-bold">自然な立ち姿</div></label>
+              <label><input type="radio" name="pose" value="walking_snapshot" class="hidden"><div class="select-card text-center text-xs font-bold">歩き出し</div></label>
+              <label><input type="radio" name="pose" value="energetic_jump" class="hidden"><div class="select-card text-center text-xs font-bold">ジャンプ</div></label>
+              <label><input type="radio" name="pose" value="looking_away" class="hidden"><div class="select-card text-center text-xs font-bold">目線外し</div></label>
+            </div>
           </div>
         </section>
 
