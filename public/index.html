@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>男児コーデ画像メーカー（プロトタイプ版）</title>
+  <title>キッズコーデ画像メーカー（プロトタイプ版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style type="text/tailwindcss">
     body { font-family: 'Inter', -apple-system, sans-serif; }
@@ -21,7 +21,7 @@
   <div class="max-w-6xl mx-auto px-6">
     <header class="py-12 flex justify-between items-end">
       <div>
-        <h1 class="text-4xl font-black text-slate-900 tracking-tighter">&#x1f466; 男児コーデ画像メーカー</h1>
+        <h1 class="text-4xl font-black text-slate-900 tracking-tighter">&#x1f466; キッズコーデ画像メーカー</h1>
         <p class="text-sm text-gray-500">置き画から男児のコーデ画像を生成します(プロトタイプ版)</p>
       </div>
     </header>
@@ -112,6 +112,25 @@
               <label><input type="radio" name="ageHeight" value="5:110" class="hidden" checked><div class="select-card text-center py-2 text-[10px] font-bold">5歳<br>(110cm)</div></label>
               <label><input type="radio" name="ageHeight" value="7:120" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">7歳<br>(120cm)</div></label>
             </div>
+          </div>
+          <div>
+            <h2 class="text-lg font-bold text-slate-800 mb-4">
+              ⑦ 性別
+            </h2>
+            <div class="grid grid-cols-2 gap-2">
+              <label><input type="radio" name="gender" value="boy" class="hidden" checked><div class="select-card text-center py-2 text-[10px] font-bold">男児</div></label>
+              <label><input type="radio" name="gender" value="girl" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">女児</div></label>
+            </div>
+          </div>
+          <div>
+            <h2 class="text-lg font-bold text-slate-800 mb-4">
+              ⑧ ヘアスタイル
+            </h2>
+            <div class="grid grid-cols-2 gap-2">
+              <label><input type="radio" name="hairStyle" value="natural" class="hidden"><div class="select-card text-center py-2 text-[10px] font-bold">ナチュラル</div></label>
+              <label><input type="radio" name="hairStyle" value="casual" class="hidden" checked><div class="select-card text-center py-2 text-[10px] font-bold">カジュアル</div></label>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-2 leading-relaxed">※「和装」選択時は、性別に合わせた和装向けのヘアスタイル（男児：上品めに整えたスタイル／女児：結ったかわいらしいスタイル）が自動的に適用されます</p>
           </div>
         </section>
 
@@ -276,6 +295,8 @@
       const race = document.querySelector('input[name="race"]:checked').value;
       const outfitStyle = document.querySelector('input[name="outfitStyle"]:checked').value;
       const [age, height] = document.querySelector('input[name="ageHeight"]:checked').value.split(':');
+      const gender = document.querySelector('input[name="gender"]:checked').value;
+      const hairStyle = document.querySelector('input[name="hairStyle"]:checked').value;
       document.getElementById('placeholder').classList.add('hidden'); resultImg.classList.add('hidden'); loading.classList.remove('hidden'); generateBtn.disabled = true;
       document.getElementById('previewActions').classList.add('hidden'); document.getElementById('downloadBtn').classList.add('hidden');
       document.getElementById('creditsInfo').classList.add('hidden');
@@ -288,7 +309,7 @@
         const res = await fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'create_model', pose, expression, race, outfitStyle, age, height, hasHat: !!state.hat, hasTop: !!state.top, hasBottom: !!state.bottom, hasShoe: !!state.shoe })
+          body: JSON.stringify({ action: 'create_model', pose, expression, race, outfitStyle, age, height, gender, hairStyle, hasHat: !!state.hat, hasTop: !!state.top, hasBottom: !!state.bottom, hasShoe: !!state.shoe })
         });
         const { modelImage } = await res.json();
         const tasks = [];
