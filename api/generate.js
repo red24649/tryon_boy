@@ -159,22 +159,21 @@ export default async function handler(req, res) {
 
       console.log(`Starting Fashn.ai job for category: ${category}, previewMode: ${!!previewMode}, outfitStyle: ${outfitStyle}`);
 
-      // カテゴリに応じた自然な着用感（しわ・フィット感）を促すプロンプト
-      const stylingPromptMap = {
-        tops: "soft, lightweight, flowing fabric drape with realistic wrinkles and folds around the shoulders, chest, and sleeves, NOT flat, NOT stiff, NOT ironed-looking, NOT board-like",
-        bottoms: "soft, lightweight, flowing fabric drape with realistic wrinkles and folds around the hips, knees, and hem, NOT flat, NOT stiff, NOT ironed-looking, NOT board-like",
-        shoes: "natural fit hugging the shape of the feet",
-        accessories: "natural fit and drape"
-      };
-      // 和装（着物・袴）の場合は、洋服の丈感に縮小されないよう明示的に指示
-      const wafukuStylingPromptMap = {
-        tops: "preserve the exact wide, loose kimono sleeve shape reaching down past the wrist, do NOT shrink or tighten the sleeves to a western t-shirt fit. The fabric is soft, lightweight, and flowing, NOT stiff, NOT rigid, NOT board-like, with natural fabric drape and realistic wrinkles",
-        bottoms: "preserve the exact full-length hakama proportions reaching the ankles with wide pleated legs, do NOT shorten to knee-length or shorts-length. Preserve the waistband exactly as shown in the reference image: a moderate-height band (roughly a hand's width tall, NOT an oversized tall panel, NOT extending down toward the hips) sitting at or just slightly above the natural waistline, with the pleats starting immediately below the band. IMPORTANT: carefully check whether the waistband in the reference image is a single solid color or has a distinct horizontal stripe of a different, contrasting color running along its very top edge (like a colored piping or racing stripe at the top of the band, with a different color filling the rest of the band below it). If the reference image shows such a contrasting stripe, it MUST be clearly reproduced using the exact same colors as shown in the reference image, do NOT omit it and do NOT flatten the waistband into a single solid color. Preserve the front cord/himo with its bow knot and tassels, matching their exact color and position as in the reference image. Do NOT shrink the waistband into a narrow western-style waistband, and do NOT enlarge it into an oversized panel. The fabric is soft and lightweight with natural drape and realistic wrinkles, NOT stiff, NOT rigid, NOT board-like or cardboard-like"
+      // 全カテゴリ共通：シンプルで汎用的なプロンプト
+      // 長い詳細指示はFashn.aiのモデルを混乱させる傾向があるため、
+      // 「元画像のすべてのディテールをそのまま忠実に再現せよ」の一点に絞る
+      const universalPrompt = "Reproduce every visual detail from the reference garment image with pixel-level accuracy: all colors, color boundaries, contrasting edges, trims, stripes, prints, logos, textures, stitching, and hardware. The fabric should look soft, lightweight, and naturally draped with realistic wrinkles, NOT stiff or flat.";
 
-      };
-      const stylingPrompt = outfitStyle === 'wafuku'
-        ? (wafukuStylingPromptMap[category] || stylingPromptMap[category] || stylingPromptMap.tops)
-        : (stylingPromptMap[category] || stylingPromptMap.tops);
+      // 和装・洋服ともにシルエット保持の最低限の指示のみ追加
+      const silhouetteHint = outfitStyle === 'wafuku'
+        ? (category === 'tops'
+            ? " Preserve the wide, loose kimono sleeve proportions exactly as in the reference image."
+            : category === 'bottoms'
+            ? " Preserve the full-length wide-leg hakama proportions reaching the ankles, do NOT shorten."
+            : "")
+        : "";
+
+      const stylingPrompt = universalPrompt + silhouetteHint;
 
       // プレビューモード：低解像度・高速・低クレジットで確認用の合成を行う
       // 本生成モード：高解像度・高精度で最終出力を行う
