@@ -57,7 +57,7 @@ export default async function handler(req, res) {
           : "a trendy white short-sleeve t-shirt";
         outfitBase += " and ";
         outfitBase += hasBottom
-          ? "plain white wide-leg pleated hakama-style trousers with box pleats, reaching all the way down to the ankles, NOT shorts length, NOT knee length"
+          ? "plain white wide-leg pleated hakama-style trousers with box pleats, reaching all the way down to the ankles, NOT shorts length, NOT knee length, with a tall wide waistband sitting high on the torso (above the natural waistline, like a wide sash) rather than a narrow western-style waistband"
           : "classic blue denim pants with a natural washed texture";
       } else {
         // トップス：Fashn.aiで上書きする場合はゆったりめの白Tにして、着せ替え後のサイズ感を大きく見せる
@@ -141,7 +141,7 @@ export default async function handler(req, res) {
       // 和装（着物・袴）の場合は、洋服の丈感に縮小されないよう明示的に指示
       const wafukuStylingPromptMap = {
         tops: "preserve the exact wide, loose kimono sleeve shape reaching down past the wrist, do NOT shrink or tighten the sleeves to a western t-shirt fit, natural fabric drape with realistic wrinkles",
-        bottoms: "preserve the exact full-length hakama proportions reaching the ankles with wide pleated legs, do NOT shorten to knee-length or shorts-length, natural fabric drape with realistic wrinkles"
+        bottoms: "preserve the exact full-length hakama proportions reaching the ankles with wide pleated legs, do NOT shorten to knee-length or shorts-length. Preserve the tall, wide obi-style waistband exactly as shown in the reference image, sitting high on the torso (well above the natural waistline, like a wide sash), including its exact color, height, and the front cord/himo with its bow knot and tassels positioned exactly as in the reference image. Do NOT shrink the waistband into a narrow western-style waistband, natural fabric drape with realistic wrinkles"
       };
       const stylingPrompt = outfitStyle === 'wafuku'
         ? (wafukuStylingPromptMap[category] || stylingPromptMap[category] || stylingPromptMap.tops)
