@@ -19,7 +19,14 @@ export default async function handler(req, res) {
     // ステップ1: create_model ? Geminiで子供モデルの画像を生成
     // ============================================================
     if (action === 'create_model') {
-      const { pose, expression, race, hasHat, hasTop, hasBottom, hasShoe, outfitStyle } = req.body;
+      const { pose, expression, race, hasHat, hasTop, hasBottom, hasShoe, outfitStyle, age, height } = req.body;
+      // 年齢・身長（未指定時は従来通り5歳・110cm）
+      const modelAge = age || '5';
+      const modelHeight = height || '110';
+      // 幼児は体型のプロポーションが大人びた5-7歳とは異なるため、年齢に応じて体型のヒントを補足
+      const bodyProportionHint = modelAge === '3'
+        ? "with the naturally rounder, softer toddler body proportions typical of a 3-year-old (shorter limbs relative to torso, slightly rounder face and belly), NOT the leaner proportions of an older child"
+        : "";
 
       // ポーズのマッピング
       const poseMap = {
@@ -83,7 +90,7 @@ export default async function handler(req, res) {
         : "barefoot on clean floor";
 
       // 背景：撮影機材（ソフトボックス・アンブレラ等）が映り込まないよう明示的に指定
-      const modelPrompt = `A high-end professional fashion catalog photograph of a ${raceDescription} boy child, 5 years old, height 110cm. The child has a ${expressionDescription}. Posture: ${poseDescription}. Wearing: ${outfitBase}. ${fabricTexturePrompt} Hair and head: ${hatPrompt}. Feet: ${footwearPrompt}. Background: Completely seamless solid light gray backdrop filling the entire frame, absolutely NO visible studio equipment, NO lighting rigs, NO softboxes, NO umbrellas, NO shadows of equipment. High resolution, bright and evenly lit high-key studio lighting typical of e-commerce product photography, well-exposed with minimal harsh shadows, soft fill light bringing out gentle fabric texture without darkening the overall image, realistic skin and fabric textures.`;
+      const modelPrompt = `A high-end professional fashion catalog photograph of a ${raceDescription} boy child, ${modelAge} years old, height ${modelHeight}cm${bodyProportionHint ? ', ' + bodyProportionHint : ''}. The child has a ${expressionDescription}. Posture: ${poseDescription}. Wearing: ${outfitBase}. ${fabricTexturePrompt} Hair and head: ${hatPrompt}. Feet: ${footwearPrompt}. Background: Completely seamless solid light gray backdrop filling the entire frame, absolutely NO visible studio equipment, NO lighting rigs, NO softboxes, NO umbrellas, NO shadows of equipment. High resolution, bright and evenly lit high-key studio lighting typical of e-commerce product photography, well-exposed with minimal harsh shadows, soft fill light bringing out gentle fabric texture without darkening the overall image, realistic skin and fabric textures.`;
 
       console.log("Starting Gemini image generation for create_model...");
       const startTime = Date.now();
