@@ -19,7 +19,9 @@ export default async function handler(req, res) {
     // ステップ1: create_model ? Geminiで子供モデルの画像を生成
     // ============================================================
     if (action === 'create_model') {
-      const { pose, expression, race, hasHat, hasTop, hasBottom, hasShoe, outfitStyle, age, height } = req.body;
+      const { pose, expression, race, hasHat, hasTop, hasBottom, hasShoe, outfitStyle, age, height, gender, hairStyle } = req.body;
+      // 性別（未指定時は従来通り男児）
+      const genderWord = gender === 'girl' ? 'girl' : 'boy';
       // 年齢・身長（未指定時は従来通り5歳・110cm）
       const modelAge = age || '5';
       const modelHeight = height || '110';
@@ -78,19 +80,38 @@ export default async function handler(req, res) {
       }
       // 生地の質感：不自然な平坦さを避け、自然なしわ・折り目を明示
       const fabricTexturePrompt = "The fabric of the clothing has natural texture with soft, realistic folds, creases, and gentle wrinkles that give it authentic 3D volume, NOT flat, NOT perfectly smooth, NOT ironed-flat.";
-      // 髪型：横分けを避け、少し長め・無造作でストリート感のあるスタイルを明示
+      // 髪型：性別・ヘアスタイル選択・和装かどうかで分岐
       // 「日本人（黒髪）」選択時は髪色を明示的に黒に固定（未指定だと茶髪寄りになりがちなため）
       const hairColorPrompt = forceBlackHair ? "natural jet-black hair color (NOT brown, NOT dyed)" : "natural texture";
+
+      let hairStyleBase;
+      if (outfitStyle === 'wafuku') {
+        // 和装の場合：ヘアスタイル選択に関わらず、和装にふさわしいスタイルに固定
+        hairStyleBase = genderWord === 'girl'
+          ? `hair neatly styled up in an elegant, cute Japanese-style updo suitable for kimono photography, with soft face-framing strands and a decorative, adorable finish, with ${hairColorPrompt}`
+          : `neatly combed, slightly refined and elegant short-to-medium hairstyle suitable for formal kimono photography, tidy and polished, NOT messy or tousled, with ${hairColorPrompt}`;
+      } else if (hairStyle === 'natural') {
+        // ナチュラル：あまり作り込まない、自然な髪型
+        hairStyleBase = genderWord === 'girl'
+          ? `natural shoulder-length hair, straight or with a very slight wave, simple and soft with minimal styling, with ${hairColorPrompt}`
+          : `neat, natural short-to-medium hair with soft natural texture, simple everyday cut with minimal styling, NOT overly messy, with ${hairColorPrompt}`;
+      } else {
+        // カジュアル（デフォルト・従来通り）
+        hairStyleBase = genderWord === 'girl'
+          ? `shoulder-length hair with gentle natural waves at the ends, with ${hairColorPrompt}, neat and cute, half-up style optional`
+          : `medium-length tousled messy hair with ${hairColorPrompt}, slightly longer on top with a casual street-style look, NOT side-parted`;
+      }
+
       const hatPrompt = hasHat
-        ? `bareheaded, no hat, medium-length tousled messy hair with ${hairColorPrompt}, slightly longer on top with a casual street-style look, NOT side-parted`
-        : `no hat, medium-length tousled messy hair with ${hairColorPrompt}, slightly longer on top with a casual street-style look, NOT side-parted`;
+        ? `bareheaded, no hat, ${hairStyleBase}`
+        : `no hat, ${hairStyleBase}`;
       // 足元：靴を着せ替える場合は素足の下地にする（サンダル等の靴下無しタイプにも対応できるよう、靴下は履かせない）
       const footwearPrompt = hasShoe
         ? "barefoot with clean bare feet and ankles fully visible, no socks, as a base for shoe overlay"
         : "barefoot on clean floor";
 
       // 背景：撮影機材（ソフトボックス・アンブレラ等）が映り込まないよう明示的に指定
-      const modelPrompt = `A high-end professional fashion catalog photograph of a ${raceDescription} boy child, ${modelAge} years old, height ${modelHeight}cm${bodyProportionHint ? ', ' + bodyProportionHint : ''}. The child has a ${expressionDescription}. Posture: ${poseDescription}. Wearing: ${outfitBase}. ${fabricTexturePrompt} Hair and head: ${hatPrompt}. Feet: ${footwearPrompt}. Background: Completely seamless solid light gray backdrop filling the entire frame, absolutely NO visible studio equipment, NO lighting rigs, NO softboxes, NO umbrellas, NO shadows of equipment. High resolution, bright and evenly lit high-key studio lighting typical of e-commerce product photography, well-exposed with minimal harsh shadows, soft fill light bringing out gentle fabric texture without darkening the overall image, realistic skin and fabric textures.`;
+      const modelPrompt = `A high-end professional fashion catalog photograph of a ${raceDescription} ${genderWord} child, ${modelAge} years old, height ${modelHeight}cm${bodyProportionHint ? ', ' + bodyProportionHint : ''}. The child has a ${expressionDescription}. Posture: ${poseDescription}. Wearing: ${outfitBase}. ${fabricTexturePrompt} Hair and head: ${hatPrompt}. Feet: ${footwearPrompt}. Background: Completely seamless solid light gray backdrop filling the entire frame, absolutely NO visible studio equipment, NO lighting rigs, NO softboxes, NO umbrellas, NO shadows of equipment. High resolution, bright and evenly lit high-key studio lighting typical of e-commerce product photography, well-exposed with minimal harsh shadows, soft fill light bringing out gentle fabric texture without darkening the overall image, realistic skin and fabric textures.`;
 
       console.log("Starting Gemini image generation for create_model...");
       const startTime = Date.now();
