@@ -79,7 +79,7 @@ export default async function handler(req, res) {
         outfitBase += hasBottom ? "plain white full-length straight-leg pants reaching the ankles, NOT rolled up, NOT cuffed" : "classic blue denim pants with a natural washed texture";
       }
       // 生地の質感：不自然な平坦さを避け、自然なしわ・折り目を明示
-      const fabricTexturePrompt = "The fabric of the clothing has natural texture with soft, realistic folds, creases, and gentle wrinkles that give it authentic 3D volume, NOT flat, NOT perfectly smooth, NOT ironed-flat.";
+      const fabricTexturePrompt = "The fabric of the clothing is soft, lightweight, and flowing, draping naturally and moving with the body's contours. It has natural texture with soft, realistic folds, creases, and gentle wrinkles that give it authentic 3D volume. NOT flat, NOT perfectly smooth, NOT ironed-flat, NOT stiff, NOT rigid, NOT board-like or cardboard-like, NOT starched-looking.";
       // 髪型：性別・ヘアスタイル選択で分岐（和装かどうかは問わず、選択したヘアスタイルをそのまま適用）
       // 「日本人（黒髪）」選択時は髪色を明示的に黒に固定（未指定だと茶髪寄りになりがちなため）
       const hairColorPrompt = forceBlackHair ? "natural jet-black hair color (NOT brown, NOT dyed)" : "natural texture";
@@ -161,15 +161,16 @@ export default async function handler(req, res) {
 
       // カテゴリに応じた自然な着用感（しわ・フィット感）を促すプロンプト
       const stylingPromptMap = {
-        tops: "natural fabric drape with realistic wrinkles and folds around the shoulders, chest, and sleeves, not flat or ironed-looking",
-        bottoms: "natural fabric drape with realistic wrinkles and folds around the hips, knees, and hem, not flat or ironed-looking",
+        tops: "soft, lightweight, flowing fabric drape with realistic wrinkles and folds around the shoulders, chest, and sleeves, NOT flat, NOT stiff, NOT ironed-looking, NOT board-like",
+        bottoms: "soft, lightweight, flowing fabric drape with realistic wrinkles and folds around the hips, knees, and hem, NOT flat, NOT stiff, NOT ironed-looking, NOT board-like",
         shoes: "natural fit hugging the shape of the feet",
         accessories: "natural fit and drape"
       };
       // 和装（着物・袴）の場合は、洋服の丈感に縮小されないよう明示的に指示
       const wafukuStylingPromptMap = {
-        tops: "preserve the exact wide, loose kimono sleeve shape reaching down past the wrist, do NOT shrink or tighten the sleeves to a western t-shirt fit, natural fabric drape with realistic wrinkles",
-        bottoms: "preserve the exact full-length hakama proportions reaching the ankles with wide pleated legs, do NOT shorten to knee-length or shorts-length. Preserve the waistband exactly as shown in the reference image: a moderate-height band (roughly a hand's width tall, NOT an oversized tall panel, NOT extending down toward the hips) sitting at or just slightly above the natural waistline, with the pleats starting immediately below the band. Faithfully reproduce the waistband's exact color(s) and pattern as shown in the reference image ? if the reference shows a two-tone design or a contrasting trim/edge along the top border of the waistband, preserve that exact color scheme and trim detail; do NOT flatten it into a single solid color if the reference shows multiple colors or a trim accent. Preserve the front cord/himo with its bow knot and tassels, matching their exact color and position as in the reference image. Do NOT shrink the waistband into a narrow western-style waistband, and do NOT enlarge it into an oversized panel, natural fabric drape with realistic wrinkles"
+        tops: "preserve the exact wide, loose kimono sleeve shape reaching down past the wrist, do NOT shrink or tighten the sleeves to a western t-shirt fit. The fabric is soft, lightweight, and flowing, NOT stiff, NOT rigid, NOT board-like, with natural fabric drape and realistic wrinkles",
+        bottoms: "preserve the exact full-length hakama proportions reaching the ankles with wide pleated legs, do NOT shorten to knee-length or shorts-length. Preserve the waistband exactly as shown in the reference image: a moderate-height band (roughly a hand's width tall, NOT an oversized tall panel, NOT extending down toward the hips) sitting at or just slightly above the natural waistline, with the pleats starting immediately below the band. IMPORTANT: carefully check whether the waistband in the reference image is a single solid color or has a distinct horizontal stripe of a different, contrasting color running along its very top edge (like a colored piping or racing stripe at the top of the band, with a different color filling the rest of the band below it). If the reference image shows such a contrasting stripe, it MUST be clearly reproduced using the exact same colors as shown in the reference image, do NOT omit it and do NOT flatten the waistband into a single solid color. Preserve the front cord/himo with its bow knot and tassels, matching their exact color and position as in the reference image. Do NOT shrink the waistband into a narrow western-style waistband, and do NOT enlarge it into an oversized panel. The fabric is soft and lightweight with natural drape and realistic wrinkles, NOT stiff, NOT rigid, NOT board-like or cardboard-like"
+
       };
       const stylingPrompt = outfitStyle === 'wafuku'
         ? (wafukuStylingPromptMap[category] || stylingPromptMap[category] || stylingPromptMap.tops)
