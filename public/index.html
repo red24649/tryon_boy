@@ -128,6 +128,9 @@
             <button id="redoBtn" class="bg-slate-100 text-slate-600 px-5 py-2.5 rounded-full font-bold text-sm hover:bg-slate-200">やり直す</button>
           </div>
         </div>
+        <div id="creditsInfo" class="hidden mt-4 text-center text-xs font-bold text-slate-400 tracking-wide">
+          クレジット取得中...
+        </div>
       </div>
     </div>
   </div>
@@ -158,6 +161,31 @@
     const generateBtn = document.getElementById('generateBtn'), statusLabel = document.getElementById('statusLabel'), resultImg = document.getElementById('resultImg'), loading = document.getElementById('loading');
     // プレビュー結果から本生成に進む際に再利用するための保存領域
     let lastBaseModel = null, lastTasks = [], lastPose = null, lastOutfitStyle = null;
+    // クレジット使用量表示のための保存領域（一連の生成が始まる直前の残高）
+    let creditsBeforeGen = null;
+
+    // Fashn.aiの現在の残クレジット数を取得
+    async function getCredits() {
+      try {
+        const res = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'get_credits' }) });
+        const data = await res.json();
+        return data?.credits?.total ?? null;
+      } catch (e) {
+        console.warn("クレジット残高の取得に失敗しました", e);
+        return null;
+      }
+    }
+
+    // 生成完了後にクレジット使用量・残高を画像とは別の領域に表示
+    async function updateCreditsDisplay() {
+      const creditsInfo = document.getElementById('creditsInfo');
+      if (creditsBeforeGen === null) return;
+      const creditsAfter = await getCredits();
+      if (creditsAfter === null) { creditsInfo.classList.add('hidden'); return; }
+      const used = Math.max(0, creditsBeforeGen - creditsAfter);
+      creditsInfo.innerText = `今回の生成で使用: ${used} クレジット　｜　残クレジット: ${creditsAfter}`;
+      creditsInfo.classList.remove('hidden');
+    }
 
     async function processSequentially(currentModel, tasks, total, selectedPose, previewMode, outfitStyle) {
       if (tasks.length === 0) {
@@ -172,6 +200,7 @@
           document.getElementById('downloadBtn').classList.remove('hidden');
           generateBtn.disabled = false;
         }
+        updateCreditsDisplay();
         return;
       }
       const task = tasks.shift();
@@ -236,8 +265,11 @@
       const outfitStyle = document.querySelector('input[name="outfitStyle"]:checked').value;
       document.getElementById('placeholder').classList.add('hidden'); resultImg.classList.add('hidden'); loading.classList.remove('hidden'); generateBtn.disabled = true;
       document.getElementById('previewActions').classList.add('hidden'); document.getElementById('downloadBtn').classList.add('hidden');
+      document.getElementById('creditsInfo').classList.add('hidden');
       document.querySelectorAll('.step-dot').forEach((d, i) => d.classList.toggle('active', i === 0));
       statusLabel.innerText = "ベースモデル(影・物理補正)生成中";
+      // このプレビュー生成で使うクレジット量を計算するため、開始前の残高を記録
+      creditsBeforeGen = await getCredits();
 
       try {
         const res = await fetch('/api/generate', {
@@ -259,6 +291,7 @@
             // 着せ替えアイテムがない場合はプレビューの意味がないため、そのまま結果表示
             resultImg.src = modelImage; resultImg.classList.remove('hidden'); loading.classList.add('hidden'); generateBtn.disabled = false;
             document.getElementById('downloadBtn').classList.remove('hidden');
+            updateCreditsDisplay();
         } else {
             processSequentially(modelImage, tasks.slice(), tasks.length, pose, true, outfitStyle);
         }
@@ -270,12 +303,15 @@
       }
     };
 
-    document.getElementById('confirmBtn').onclick = () => {
+    document.getElementById('confirmBtn').onclick = async () => {
       if (!lastBaseModel || lastTasks.length === 0) return;
       document.getElementById('previewActions').classList.add('hidden');
+      document.getElementById('creditsInfo').classList.add('hidden');
       resultImg.classList.add('hidden'); loading.classList.remove('hidden'); generateBtn.disabled = true;
       document.querySelectorAll('.step-dot').forEach((d, i) => d.classList.toggle('active', i === 0));
       statusLabel.innerText = "高画質で本生成を開始します";
+      // 本生成分のみのクレジット消費量を計算するため、ここで改めて残高を記録
+      creditsBeforeGen = await getCredits();
       // 保存しておいたベースモデルとタスク一覧を使い、今度は本生成（quality + 4k）で実行
       processSequentially(lastBaseModel, lastTasks.slice(), lastTasks.length, lastPose, false, lastOutfitStyle);
     };
@@ -283,6 +319,7 @@
     document.getElementById('redoBtn').onclick = () => {
       // プレビューを破棄し、設定変更のために初期状態に戻す（アップロード済みアイテムは維持）
       document.getElementById('previewActions').classList.add('hidden');
+      document.getElementById('creditsInfo').classList.add('hidden');
       resultImg.classList.add('hidden');
       document.getElementById('placeholder').classList.remove('hidden');
       document.getElementById('downloadBtn').classList.add('hidden');
