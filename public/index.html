@@ -187,13 +187,14 @@
     }
 
     // 生成完了後にクレジット使用量・残高を画像とは別の領域に表示
-    async function updateCreditsDisplay() {
+    async function updateCreditsDisplay(previewMode) {
       const creditsInfo = document.getElementById('creditsInfo');
       if (creditsBeforeGen === null) return;
       const creditsAfter = await getCredits();
       if (creditsAfter === null) { creditsInfo.classList.add('hidden'); return; }
       const used = Math.max(0, creditsBeforeGen - creditsAfter);
-      creditsInfo.innerText = `今回の生成で使用: ${used} クレジット　｜　残クレジット: ${creditsAfter}`;
+      const label = previewMode ? "プレビュー生成で使用" : "高画質生成で使用";
+      creditsInfo.innerText = `${label}: ${used} クレジット　｜　残クレジット: ${creditsAfter}`;
       creditsInfo.classList.remove('hidden');
     }
 
@@ -210,7 +211,7 @@
           document.getElementById('downloadBtn').classList.remove('hidden');
           generateBtn.disabled = false;
         }
-        updateCreditsDisplay();
+        updateCreditsDisplay(previewMode);
         return;
       }
       const task = tasks.shift();
@@ -302,7 +303,7 @@
             // 着せ替えアイテムがない場合はプレビューの意味がないため、そのまま結果表示
             resultImg.src = modelImage; resultImg.classList.remove('hidden'); loading.classList.add('hidden'); generateBtn.disabled = false;
             document.getElementById('downloadBtn').classList.remove('hidden');
-            updateCreditsDisplay();
+            updateCreditsDisplay(false);
         } else {
             processSequentially(modelImage, tasks.slice(), tasks.length, pose, true, outfitStyle);
         }
