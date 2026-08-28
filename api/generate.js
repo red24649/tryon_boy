@@ -40,11 +40,14 @@ export default async function handler(req, res) {
 
       // 人種のマッピング
       const raceMap = {
+        'Japanese-black-hair': 'fully Japanese',
         'Japanese': 'fully Japanese',
         'Caucasian': 'fully Caucasian',
         'half-Caucasian, half-Japanese': 'Eurasian mixed-race child of one Japanese parent and one Caucasian (Western) parent, with fair light skin tone (noticeably lighter than typical Japanese skin tone), softer facial features blending Japanese and Caucasian traits, and soft brown or light brown hair'
       };
-      const raceDescription = raceMap[race] || raceMap['Japanese'];
+      const raceDescription = raceMap[race] || raceMap['Japanese-black-hair'];
+      // 「日本人（黒髪）」選択時は髪色を黒に固定する
+      const forceBlackHair = race === 'Japanese-black-hair';
 
       // 服装ベース（Fashn.aiで後から着せ替えるアイテムは白い下地にする）
       // outfitStyle: "wafuku"（着物・袴）の場合は、洋服とは全く違う裁ち方に合わせたベースにする
@@ -69,9 +72,11 @@ export default async function handler(req, res) {
       // 生地の質感：不自然な平坦さを避け、自然なしわ・折り目を明示
       const fabricTexturePrompt = "The fabric of the clothing has natural texture with soft, realistic folds, creases, and gentle wrinkles that give it authentic 3D volume, NOT flat, NOT perfectly smooth, NOT ironed-flat.";
       // 髪型：横分けを避け、少し長め・無造作でストリート感のあるスタイルを明示
+      // 「日本人（黒髪）」選択時は髪色を明示的に黒に固定（未指定だと茶髪寄りになりがちなため）
+      const hairColorPrompt = forceBlackHair ? "natural jet-black hair color (NOT brown, NOT dyed)" : "natural texture";
       const hatPrompt = hasHat
-        ? "bareheaded, no hat, medium-length tousled messy hair with natural texture, slightly longer on top with a casual street-style look, NOT side-parted"
-        : "no hat, medium-length tousled messy hair with natural texture, slightly longer on top with a casual street-style look, NOT side-parted";
+        ? `bareheaded, no hat, medium-length tousled messy hair with ${hairColorPrompt}, slightly longer on top with a casual street-style look, NOT side-parted`
+        : `no hat, medium-length tousled messy hair with ${hairColorPrompt}, slightly longer on top with a casual street-style look, NOT side-parted`;
       // 足元：靴を着せ替える場合は素足の下地にする（サンダル等の靴下無しタイプにも対応できるよう、靴下は履かせない）
       const footwearPrompt = hasShoe
         ? "barefoot with clean bare feet and ankles fully visible, no socks, as a base for shoe overlay"
