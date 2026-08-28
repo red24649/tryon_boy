@@ -205,6 +205,20 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
+    // ステップ4: get_credits ? Fashn.aiの残クレジット残高を取得
+    // ============================================================
+    else if (action === 'get_credits') {
+      const creditsRes = await fetch('https://api.fashn.ai/v1/credits', {
+        headers: { 'Authorization': `Bearer ${fashnApiKey}` }
+      });
+      if (!creditsRes.ok) {
+        throw new Error(`クレジット残高の取得に失敗しました (${creditsRes.status})`);
+      }
+      const creditsData = await creditsRes.json();
+      return res.status(200).json(creditsData);
+    }
+
+    // ============================================================
     // 未知のアクション → 即座にエラーを返す（ハング防止）
     // ============================================================
     else {
