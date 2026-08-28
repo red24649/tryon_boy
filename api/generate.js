@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     // ステップ1: create_model ? Geminiで子供モデルの画像を生成
     // ============================================================
     if (action === 'create_model') {
-      const { pose, expression, race, hasHat, hasTop, hasBottom, hasShoe } = req.body;
+      const { pose, expression, race, hasHat, hasTop, hasBottom, hasShoe, outfitStyle } = req.body;
 
       // ポーズのマッピング
       const poseMap = {
@@ -47,12 +47,25 @@ export default async function handler(req, res) {
       const raceDescription = raceMap[race] || raceMap['Japanese'];
 
       // 服装ベース（Fashn.aiで後から着せ替えるアイテムは白い下地にする）
+      // outfitStyle: "wafuku"（着物・袴）の場合は、洋服とは全く違う裁ち方に合わせたベースにする
+      // （広い振袖状の袖、足首までのプリーツの入った袴シルエット）ことで、
+      // Fashn.aiが着せ替える際に洋服の体型に引っ張られて縮んでしまうのを防ぐ
       let outfitBase = "";
-      // トップス：Fashn.aiで上書きする場合はゆったりめの白Tにして、着せ替え後のサイズ感を大きく見せる
-      outfitBase += hasTop ? "a slightly oversized plain white crewneck t-shirt" : "a trendy white short-sleeve t-shirt";
-      outfitBase += " and ";
-      // ボトムス：ロールアップ防止のためフルレングスを明示
-      outfitBase += hasBottom ? "plain white full-length straight-leg pants reaching the ankles, NOT rolled up, NOT cuffed" : "classic blue denim pants with a natural washed texture";
+      if (outfitStyle === 'wafuku') {
+        outfitBase += hasTop
+          ? "a plain white traditional Japanese kimono-style top (haori/kimono silhouette) with wide, loose, flowing sleeves (furisode-style) that hang down past the wrist, straight kimono collar crossing at the front"
+          : "a trendy white short-sleeve t-shirt";
+        outfitBase += " and ";
+        outfitBase += hasBottom
+          ? "plain white wide-leg pleated hakama-style trousers with box pleats, reaching all the way down to the ankles, NOT shorts length, NOT knee length"
+          : "classic blue denim pants with a natural washed texture";
+      } else {
+        // トップス：Fashn.aiで上書きする場合はゆったりめの白Tにして、着せ替え後のサイズ感を大きく見せる
+        outfitBase += hasTop ? "a slightly oversized plain white crewneck t-shirt" : "a trendy white short-sleeve t-shirt";
+        outfitBase += " and ";
+        // ボトムス：ロールアップ防止のためフルレングスを明示
+        outfitBase += hasBottom ? "plain white full-length straight-leg pants reaching the ankles, NOT rolled up, NOT cuffed" : "classic blue denim pants with a natural washed texture";
+      }
       // 生地の質感：不自然な平坦さを避け、自然なしわ・折り目を明示
       const fabricTexturePrompt = "The fabric of the clothing has natural texture with soft, realistic folds, creases, and gentle wrinkles that give it authentic 3D volume, NOT flat, NOT perfectly smooth, NOT ironed-flat.";
       // 髪型：横分けを避け、少し長め・無造作でストリート感のあるスタイルを明示
@@ -110,13 +123,13 @@ export default async function handler(req, res) {
     // ステップ2: start ? モデル画像＋服画像をFashn.aiに送信
     // ============================================================
     else if (action === 'start') {
-      const { modelImage, productPreview, category, previewMode } = req.body;
+      const { modelImage, productPreview, category, previewMode, outfitStyle } = req.body;
 
       if (!modelImage || !productPreview) {
         return res.status(400).json({ error: 'modelImage と productPreview が必要です' });
       }
 
-      console.log(`Starting Fashn.ai job for category: ${category}, previewMode: ${!!previewMode}`);
+      console.log(`Starting Fashn.ai job for category: ${category}, previewMode: ${!!previewMode}, outfitStyle: ${outfitStyle}`);
 
       // カテゴリに応じた自然な着用感（しわ・フィット感）を促すプロンプト
       const stylingPromptMap = {
@@ -125,7 +138,14 @@ export default async function handler(req, res) {
         shoes: "natural fit hugging the shape of the feet",
         accessories: "natural fit and drape"
       };
-      const stylingPrompt = stylingPromptMap[category] || stylingPromptMap.tops;
+      // 和装（着物・袴）の場合は、洋服の丈感に縮小されないよう明示的に指示
+      const wafukuStylingPromptMap = {
+        tops: "preserve the exact wide, loose kimono sleeve shape reaching down past the wrist, do NOT shrink or tighten the sleeves to a western t-shirt fit, natural fabric drape with realistic wrinkles",
+        bottoms: "preserve the exact full-length hakama proportions reaching the ankles with wide pleated legs, do NOT shorten to knee-length or shorts-length, natural fabric drape with realistic wrinkles"
+      };
+      const stylingPrompt = outfitStyle === 'wafuku'
+        ? (wafukuStylingPromptMap[category] || stylingPromptMap[category] || stylingPromptMap.tops)
+        : (stylingPromptMap[category] || stylingPromptMap.tops);
 
       // プレビューモード：低解像度・高速・低クレジットで確認用の合成を行う
       // 本生成モード：高解像度・高精度で最終出力を行う
